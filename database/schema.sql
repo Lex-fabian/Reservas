@@ -1,10 +1,8 @@
--- Script para crear la base de datos ReservasApp
-
-CREATE DATABASE IF NOT EXISTS reservasapp
+CREATE DATABASE IF NOT EXISTS reservasdb
 CHARACTER SET utf8mb4
 COLLATE utf8mb4_unicode_ci;
 
-USE reservasapp;
+USE reservasdb;
 
 -- Tabla de usuarios
 CREATE TABLE IF NOT EXISTS usuarios (
