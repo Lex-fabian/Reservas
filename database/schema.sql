@@ -53,6 +53,20 @@ CREATE TABLE IF NOT EXISTS areas (
   INDEX idx_estado (estado)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Tabla intermedia para relación many-to-many entre usuarios y conjuntos
+CREATE TABLE IF NOT EXISTS usuario_conjunto (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  usuarioId INT NOT NULL,
+  conjuntoId INT NOT NULL,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (usuarioId) REFERENCES usuarios(id) ON DELETE CASCADE,
+  FOREIGN KEY (conjuntoId) REFERENCES conjuntos(id) ON DELETE CASCADE,
+  UNIQUE KEY unique_usuario_conjunto (usuarioId, conjuntoId),
+  INDEX idx_usuario (usuarioId),
+  INDEX idx_conjunto (conjuntoId)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Tabla de reservas
 CREATE TABLE IF NOT EXISTS reservas (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -97,6 +111,14 @@ INSERT INTO conjuntos (nombre_conjunto, direccion, estado) VALUES
 ('Los Arrayanes', 'Av. 6 de Diciembre y Gaspar de Villarroel', 'activo'),
 ('Portal del Bosque', 'Calle Los Pinos N34-123 y Av. Eloy Alfaro', 'activo'),
 ('Conjunto Las Orquídeas', 'Sector San Rafael, Calle Principal', 'activo');
+
+-- Asignar usuarios a conjuntos (relación many-to-many)
+-- Usuario 'lex' pertenece a dos conjuntos: Los Arrayanes y Portal del Bosque
+-- Usuario 'cliente' pertenece solo a Las Orquídeas
+INSERT INTO usuario_conjunto (usuarioId, conjuntoId) VALUES
+(2, 1), -- Lex en Los Arrayanes
+(2, 2), -- Lex en Portal del Bosque
+(3, 3); -- Cliente en Las Orquídeas
 
 -- Insertar áreas comunes de ejemplo
 INSERT INTO areas (conjuntoId, nombre_area, maximo_personas, costo, tiempo_minimo, observaciones, estado) VALUES

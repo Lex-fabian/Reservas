@@ -1,39 +1,58 @@
-const { Usuario } = require('../models');
+const { Usuario, Conjunto } = require('../models');
 const { generarToken } = require('../middleware/auth');
 
 const authController = {
   async register(req, res) {
     try {
-      const { nombre, email, password, telefono, rol } = req.body;
+      const { nombre, apellido, email, telefono, cedula, usuario, contraseña, tipo_usuario, conjuntos } = req.body;
 
-      if (!nombre || !email || !password) {
-        return res.status(400).json({ error: 'Nombre, email y password son requeridos' });
+      if (!nombre || !apellido || !email || !usuario || !contraseña) {
+        return res.status(400).json({ error: 'Todos los campos obligatorios son requeridos' });
       }
 
-      const usuarioExiste = await Usuario.findOne({ where: { email } });
+      const usuarioExiste = await Usuario.findOne({ 
+        where: { 
+          $or: [
+            { email },
+            { usuario },
+            { cedula: cedula || null }
+          ]
+        }
+      });
+      
       if (usuarioExiste) {
-        return res.status(400).json({ error: 'El email ya está registrado' });
+        return res.status(400).json({ error: 'El email, usuario o cédula ya están registrados' });
       }
 
-      const usuario = await Usuario.create({
+      const nuevoUsuario = await Usuario.create({
         nombre,
+        apellido,
         email,
-        password,
         telefono,
-        rol: rol || 'cliente'
+        cedula,
+        usuario,
+        contraseña,
+        tipo_usuario: tipo_usuario || 'usuario'
       });
 
-      const token = generarToken(usuario);
+      // Asignar conjuntos si se proporcionan
+      if (conjuntos && Array.isArray(conjuntos) && conjuntos.length > 0) {
+        await nuevoUsuario.setConjuntos(conjuntos);
+      }
+
+      const usuarioCreado = await Usuario.findByPk(nuevoUsuario.id, {
+        attributes: { exclude: ['contraseña'] },
+        include: [{
+          model: Conjunto,
+          as: 'conjuntos',
+          attributes: ['id', 'nombre_conjunto'],
+          through: { attributes: [] }
+        }]
+      });
 
       res.status(201).json({
-        message: 'Usuario registrado exitosamente',
-        token,
-        usuario: {
-          id: usuario.id,
-          nombre: usuario.nombre,
-          email: usuario.email,
-          rol: usuario.rol
-        }
+        mensaje: 'Usuario registrado exitosamente',
+        usuario: usuarioCreado
       });
     } catch (error) {
       console.error('Error en registro:', error);

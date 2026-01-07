@@ -95,7 +95,7 @@ const areaController = {
   async actualizar(req, res) {
     try {
       const { id } = req.params;
-      const { nombre_area, maximo_personas, fotos, costo, tiempo_minimo, observaciones, estado } = req.body;
+      const { conjuntoId, nombre_area, maximo_personas, fotos, costo, tiempo_minimo, observaciones, estado } = req.body;
 
       const area = await Area.findByPk(id);
 
@@ -103,7 +103,13 @@ const areaController = {
         return res.status(404).json({ error: 'Área no encontrada' });
       }
 
+      // Validar que fotos sea una cadena si se proporciona
+      if (fotos !== undefined && fotos !== null && typeof fotos !== 'string') {
+        return res.status(400).json({ error: 'El formato de la imagen no es válido' });
+      }
+
       await area.update({
+        conjuntoId: conjuntoId || area.conjuntoId,
         nombre_area: nombre_area || area.nombre_area,
         maximo_personas: maximo_personas || area.maximo_personas,
         fotos: fotos !== undefined ? fotos : area.fotos,
@@ -119,7 +125,11 @@ const areaController = {
       });
     } catch (error) {
       console.error('Error al actualizar área:', error);
-      res.status(500).json({ error: 'Error al actualizar área' });
+      console.error('Detalles del error:', error.message);
+      res.status(500).json({ 
+        error: 'Error al actualizar área',
+        detalle: error.message 
+      });
     }
   },
 

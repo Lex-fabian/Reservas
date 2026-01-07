@@ -1,43 +1,36 @@
 import { useState, useEffect } from 'react';
-import { areaService, conjuntoService } from '../services/api';
+import { reservaService } from '../services/api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faPlus } from '@fortawesome/free-solid-svg-icons';
-import ModalArea from './ModalArea';
+import { faEdit, faTrash, faPlus, faEye } from '@fortawesome/free-solid-svg-icons';
+import ModalReserva from './ModalReserva';
 import ModalConfirmacion from './ModalConfirmacion';
 import Notificacion from './Notificacion';
-import './AreaComponent.css';
+import './ReservaComponent.css';
 
-export default function AreaComponent() {
-  const [areas, setAreas] = useState([]);
-  const [conjuntos, setConjuntos] = useState([]);
+export default function ReservaComponent() {
+  const [reservas, setReservas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [paginaActual, setPaginaActual] = useState(1);
-  const areasPorPagina = 7;
+  const reservasPorPagina = 7;
   const [modalAbierto, setModalAbierto] = useState(false);
-  const [areaEditando, setAreaEditando] = useState(null);
+  const [reservaEditando, setReservaEditando] = useState(null);
   const [modoModal, setModoModal] = useState('crear');
   const [notificacionVisible, setNotificacionVisible] = useState(false);
   const [modalConfirmacionAbierto, setModalConfirmacionAbierto] = useState(false);
-  const [areaAEliminar, setAreaAEliminar] = useState(null);
+  const [reservaAEliminar, setReservaAEliminar] = useState(null);
 
   useEffect(() => {
-    cargarAreas();
+    cargarReservas();
   }, []);
 
-  const cargarAreas = async () => {
+  const cargarReservas = async () => {
     setLoading(true);
     try {
-      // Cargar conjuntos y áreas desde la API
-      const [conjuntosResponse, areasResponse] = await Promise.all([
-        conjuntoService.obtenerTodos(),
-        areaService.obtenerTodas()
-      ]);
-      
-      setConjuntos(conjuntosResponse.conjuntos || []);
-      setAreas(areasResponse.areas || []);
+      const response = await reservaService.obtenerTodas();
+      setReservas(response.reservas || []);
     } catch (error) {
-      console.error('Error al cargar áreas:', error);
-      alert('Error al cargar áreas');
+      console.error('Error al cargar reservas:', error);
+      alert('Error al cargar reservas');
     } finally {
       setLoading(false);
     }
@@ -45,19 +38,19 @@ export default function AreaComponent() {
 
   const abrirModalCrear = () => {
     setModoModal('crear');
-    setAreaEditando(null);
+    setReservaEditando(null);
     setModalAbierto(true);
   };
 
-  const abrirModalEditar = (area) => {
+  const abrirModalEditar = (reserva) => {
     setModoModal('editar');
-    setAreaEditando(area);
+    setReservaEditando(reserva);
     setModalAbierto(true);
   };
 
   const cerrarModal = () => {
     setModalAbierto(false);
-    setAreaEditando(null);
+    setReservaEditando(null);
   };
 
   const handleSubmit = async (formData) => {
@@ -68,119 +61,121 @@ export default function AreaComponent() {
     // Procesar en segundo plano
     try {
       if (modoModal === 'crear') {
-        await areaService.crear(formData);
+        await reservaService.crear(formData);
       } else {
-        await areaService.actualizar(areaEditando.id, formData);
+        await reservaService.actualizar(reservaEditando.id, formData);
       }
-      cargarAreas();
+      cargarReservas();
     } catch (error) {
-      console.error('Error al guardar área:', error);
-      alert('Error al guardar área');
+      console.error('Error al guardar reserva:', error);
+      alert('Error al guardar reserva');
     }
   };
 
-  const handleEliminar = (area) => {
-    setAreaAEliminar(area);
+  const handleEliminar = (reserva) => {
+    setReservaAEliminar(reserva);
     setModalConfirmacionAbierto(true);
   };
 
   const confirmarEliminacion = async () => {
     try {
-      await areaService.eliminar(areaAEliminar.id);
+      await reservaService.cancelar(reservaAEliminar.id);
       setModalConfirmacionAbierto(false);
-      setAreaAEliminar(null);
-      cargarAreas();
+      setReservaAEliminar(null);
+      cargarReservas();
       setNotificacionVisible(true);
     } catch (error) {
-      console.error('Error al eliminar área:', error);
-      alert('Error al eliminar área');
+      console.error('Error al eliminar reserva:', error);
+      alert('Error al eliminar reserva');
     }
   };
 
   const cancelarEliminacion = () => {
     setModalConfirmacionAbierto(false);
-    setAreaAEliminar(null);
+    setReservaAEliminar(null);
   };
 
   const getEstadoClass = (estado) => {
-    return estado === 'activo' ? 'insignia-activo' : 'insignia-inactivo';
+    const classes = {
+      pendiente: 'insignia-advertencia',
+      confirmada: 'insignia-exito',
+      cancelada: 'insignia-peligro',
+      completada: 'insignia-info',
+    };
+    return classes[estado] || 'insignia-secundaria';
   };
 
   if (loading) {
     return (
-      <div className="contenedor-areas">
-        <div className="cargando">Cargando áreas...</div>
+      <div className="contenedor-reservas">
+        <div className="cargando">Cargando reservas...</div>
       </div>
     );
   }
 
-  // Calcular áreas para la página actual
-  const indiceUltimo = paginaActual * areasPorPagina;
-  const indicePrimero = indiceUltimo - areasPorPagina;
-  const areasActuales = areas.slice(indicePrimero, indiceUltimo);
-  const totalPaginas = Math.ceil(areas.length / areasPorPagina);
+  // Calcular reservas para la página actual
+  const indiceUltimo = paginaActual * reservasPorPagina;
+  const indicePrimero = indiceUltimo - reservasPorPagina;
+  const reservasActuales = reservas.slice(indicePrimero, indiceUltimo);
+  const totalPaginas = Math.ceil(reservas.length / reservasPorPagina);
 
   return (
-    <div className="contenedor-areas">
+    <div className="contenedor-reservas">
       <div className="encabezado-seccion">
-        <h2>Áreas Comunes</h2>
+        <h2>Reservas</h2>
         <div className="acciones-encabezado">
-          <p className="subtitulo-seccion">Total: {areas.length} áreas</p>
+          <p className="subtitulo-seccion">Total: {reservas.length} reservas</p>
           <button className="boton-nuevo" onClick={abrirModalCrear}>
-            <FontAwesomeIcon icon={faPlus} /> Nueva Área
+            <FontAwesomeIcon icon={faPlus} /> Nueva Reserva
           </button>
         </div>
       </div>
 
       <div className="tabla-wrapper">
-        <table className="tabla-areas">
+        <table className="tabla-reservas">
           <thead>
             <tr>
               <th>#</th>
-              <th>Nombre del Área</th>
-              <th>Conjunto</th>
-              <th>Capacidad</th>
-              <th>Costo</th>
-              <th>Tiempo Mín.</th>
+              <th>Usuario</th>
+              <th>Área</th>
+              <th>Fecha</th>
+              <th>Hora</th>
+              <th>Personas</th>
               <th>Estado</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {Array.from({ length: areasPorPagina }).map((_, index) => {
-              const area = areasActuales[index];
+            {Array.from({ length: reservasPorPagina }).map((_, index) => {
+              const reserva = reservasActuales[index];
               const numeroFila = indicePrimero + index + 1;
-              if (area) {
+              if (reserva) {
                 return (
-                  <tr key={area.id}>
+                  <tr key={reserva.id}>
                     <td>{numeroFila}</td>
+                    <td>{reserva.Usuario?.nombre || 'N/A'} {reserva.Usuario?.apellido || ''}</td>
+                    <td>{reserva.Area?.nombre_area || reserva.servicio || 'N/A'}</td>
+                    <td>{reserva.fecha_reserva || reserva.fecha}</td>
+                    <td>{reserva.hora_inicio || reserva.hora} - {reserva.hora_fin}</td>
+                    <td className="centrado">{reserva.personas} pers.</td>
                     <td>
-                      <div className="area-info">
-                        <span className="nombre-area">{area.nombre_area || area.nombre}</span>
-                      </div>
-                    </td>
-                    <td>{area.Conjunto?.nombre_conjunto || area.conjunto}</td>
-                    <td className="centrado">{area.maximo_personas || area.capacidad} pers.</td>
-                    <td>${area.costo}</td>
-                    <td className="centrado">{area.tiempo_minimo || area.tiempoMinimo} min</td>
-                    <td>
-                      <span className={`insignia ${getEstadoClass(area.estado)}`}>
-                        {area.estado}
+                      <span className={`insignia ${getEstadoClass(reserva.estado)}`}>
+                        {reserva.estado}
                       </span>
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: '4px' }}>
                         <button
                           className="boton-editar"
-                          onClick={() => abrirModalEditar(area)}
-                          title="Editar área"
+                          onClick={() => abrirModalEditar(reserva)}
+                          title="Ver reserva"
                         >
-                          <FontAwesomeIcon icon={faEdit} />
+                          <FontAwesomeIcon icon={faEye} />
                         </button>
                         <button
                           className="boton-eliminar"
-                          onClick={() => handleEliminar(area)}
-                          title="Eliminar área"
+                          onClick={() => handleEliminar(reserva)}
+                          title="Cancelar reserva"
                         >
                           <FontAwesomeIcon icon={faTrash} />
                         </button>
@@ -239,26 +234,25 @@ export default function AreaComponent() {
         </div>
       )}
 
-      <ModalArea
+      <ModalReserva
         isOpen={modalAbierto}
         onClose={cerrarModal}
         modo={modoModal}
-        area={areaEditando}
-        conjuntos={conjuntos}
+        reserva={reservaEditando}
         onSubmit={handleSubmit}
       />
 
       <ModalConfirmacion
         isOpen={modalConfirmacionAbierto}
-        titulo="Confirmar Eliminación"
-        mensaje={`¿Está seguro que desea eliminar el área ${areaAEliminar?.nombre_area || areaAEliminar?.nombre}?`}
+        titulo="Confirmar Cancelación"
+        mensaje={`¿Está seguro que desea cancelar la reserva?`}
         onConfirmar={confirmarEliminacion}
         onCancelar={cancelarEliminacion}
       />
 
       <Notificacion
         visible={notificacionVisible}
-        mensaje={modoModal === 'crear' ? 'Área creada exitosamente' : 'Área actualizada exitosamente'}
+        mensaje={modoModal === 'crear' ? 'Reserva creada exitosamente' : 'Reserva actualizada exitosamente'}
         onClose={() => setNotificacionVisible(false)}
       />
     </div>

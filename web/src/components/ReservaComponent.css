@@ -1,0 +1,240 @@
+.contenedor-reservas {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.encabezado-seccion {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.encabezado-seccion h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.acciones-encabezado {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.subtitulo-seccion {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.boton-nuevo {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s;
+}
+
+.boton-nuevo:hover {
+  background: #1d4ed8;
+}
+
+.tabla-wrapper {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.tabla-reservas {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.tabla-reservas thead {
+  background: #f9fafb;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.tabla-reservas th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tabla-reservas tbody tr {
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.2s;
+}
+
+.tabla-reservas tbody tr:hover {
+  background: #f9fafb;
+}
+
+.tabla-reservas tbody tr:last-child {
+  border-bottom: none;
+}
+
+.tabla-reservas td {
+  padding: 12px 16px;
+  color: #4b5563;
+}
+
+.centrado {
+  text-align: center;
+}
+
+.insignia {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.insignia-exito {
+  background: transparent;
+  color: #16a34a;
+}
+
+.insignia-advertencia {
+  background: transparent;
+  color: #ea580c;
+}
+
+.insignia-peligro {
+  background: transparent;
+  color: #dc2626;
+}
+
+.insignia-info {
+  background: transparent;
+  color: #0284c7;
+}
+
+.insignia-secundaria {
+  background: transparent;
+  color: #6b7280;
+}
+
+.boton-editar,
+.boton-eliminar {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+}
+
+.boton-editar {
+  color: #3b82f6;
+}
+
+.boton-editar:hover {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.boton-eliminar {
+  color: #ef4444;
+}
+
+.boton-eliminar:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.paginacion {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 20px;
+  align-items: center;
+}
+
+.boton-paginacion {
+  padding: 6px 12px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  color: #374151;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+  min-width: 36px;
+}
+
+.boton-paginacion:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.boton-paginacion.activo {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
+.puntos-suspensivos {
+  color: #9ca3af;
+  font-weight: 600;
+  padding: 0 4px;
+}
+
+.cargando {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .contenedor-reservas {
+    padding: 16px;
+  }
+
+  .encabezado-seccion {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .tabla-wrapper {
+    overflow-x: auto;
+  }
+
+  .tabla-reservas {
+    font-size: 12px;
+  }
+
+  .tabla-reservas th,
+  .tabla-reservas td {
+    padding: 8px 12px;
+  }
+}

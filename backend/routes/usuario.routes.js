@@ -7,6 +7,7 @@ const { verificarToken } = require('../middleware/auth');
 router.use(verificarToken);
 
 // Rutas CRUD
+router.post('/', usuarioController.crear);
 router.get('/', usuarioController.obtenerTodos);
 router.get('/:id', usuarioController.obtenerPorId);
 router.put('/:id', usuarioController.actualizar);

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import './ModalUsuario.css';
 
-export default function ModalUsuario({ isOpen, onClose, onSubmit, usuario = null, modo = 'crear' }) {
+export default function ModalUsuario({ isOpen, onClose, onSubmit, usuario = null, modo = 'crear', conjuntos = [] }) {
   const [formData, setFormData] = useState({
     nombre: '',
     apellido: '',
@@ -11,11 +11,17 @@ export default function ModalUsuario({ isOpen, onClose, onSubmit, usuario = null
     usuario: '',
     contraseña: '',
     tipo_usuario: 'usuario',
-    estado: 'activo'
+    estado: 'activo',
+    conjuntos: []
   });
 
   useEffect(() => {
     if (usuario && modo === 'editar') {
+      // Extraer solo los IDs de los conjuntos si vienen como objetos
+      const conjuntosIds = usuario.conjuntos 
+        ? usuario.conjuntos.map(c => typeof c === 'object' ? c.id : c)
+        : [];
+      
       setFormData({
         nombre: usuario.nombre || '',
         apellido: usuario.apellido || '',
@@ -25,7 +31,8 @@ export default function ModalUsuario({ isOpen, onClose, onSubmit, usuario = null
         usuario: usuario.usuario || '',
         contraseña: '',
         tipo_usuario: usuario.tipo_usuario || 'usuario',
-        estado: usuario.estado || 'activo'
+        estado: usuario.estado || 'activo',
+        conjuntos: conjuntosIds
       });
     } else {
       setFormData({
@@ -37,7 +44,8 @@ export default function ModalUsuario({ isOpen, onClose, onSubmit, usuario = null
         usuario: '',
         contraseña: '',
         tipo_usuario: 'usuario',
-        estado: 'activo'
+        estado: 'activo',
+        conjuntos: []
       });
     }
   }, [usuario, modo, isOpen]);
@@ -48,6 +56,20 @@ export default function ModalUsuario({ isOpen, onClose, onSubmit, usuario = null
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleConjuntoToggle = (conjuntoId) => {
+    setFormData(prev => {
+      const conjuntosActuales = prev.conjuntos || [];
+      const yaExiste = conjuntosActuales.includes(conjuntoId);
+      
+      return {
+        ...prev,
+        conjuntos: yaExiste
+          ? conjuntosActuales.filter(id => id !== conjuntoId)
+          : [...conjuntosActuales, conjuntoId]
+      };
+    });
   };
 
   const handleSubmit = (e) => {
@@ -162,6 +184,26 @@ export default function ModalUsuario({ isOpen, onClose, onSubmit, usuario = null
             />
           </div>
 
+          <div className="form-grupo">
+            <label>Conjuntos *</label>
+            <div className="conjuntos-selector">
+              {conjuntos.length === 0 ? (
+                <p className="texto-sin-conjuntos">No hay conjuntos disponibles</p>
+              ) : (
+                conjuntos.map(conjunto => (
+                  <label key={conjunto.id} className="checkbox-conjunto">
+                    <input
+                      type="checkbox"
+                      checked={formData.conjuntos?.includes(conjunto.id) || false}
+                      onChange={() => handleConjuntoToggle(conjunto.id)}
+                    />
+                    <span className="checkbox-label">{conjunto.nombre_conjunto || conjunto.nombre}</span>
+                  </label>
+                ))
+              )}
+            </div>
+          </div>
+
           <div className="form-row">
             <div className="form-grupo">
               <label htmlFor="tipo_usuario">Tipo de Usuario *</label>
@@ -198,7 +240,7 @@ export default function ModalUsuario({ isOpen, onClose, onSubmit, usuario = null
               Cancelar
             </button>
             <button type="submit" className="boton-guardar">
-              {modo === 'crear' ? 'Crear Usuario' : 'Guardar Cambios'}
+              {modo === 'crear' ? 'Crear Usuario' : 'Guardar'}
             </button>
           </div>
         </form>

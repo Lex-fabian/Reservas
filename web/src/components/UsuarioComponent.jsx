@@ -1,18 +1,44 @@
 import { useState, useEffect } from 'react';
-import { usuarioService, authService } from '../services/api';
+import { usuarioService, authService, conjuntoService } from '../services/api';
 import ModalUsuario from './ModalUsuario';
+import ModalConfirmacion from './ModalConfirmacion';
+import Notificacion from './Notificacion';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEdit, faTrash, faUserPlus } from '@fortawesome/free-solid-svg-icons';
 import './UsuarioComponent.css';
 
 export default function UsuarioComponent() {
   const [usuarios, setUsuarios] = useState([]);
+  const [conjuntos, setConjuntos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [usuarioEditando, setUsuarioEditando] = useState(null);
   const [modoModal, setModoModal] = useState('crear');
+  const [notificacionVisible, setNotificacionVisible] = useState(false);
+  const [modalConfirmacionAbierto, setModalConfirmacionAbierto] = useState(false);
+  const [usuarioAEliminar, setUsuarioAEliminar] = useState(null);
+  const [paginaActual, setPaginaActual] = useState(1);
+  const usuariosPorPagina = 7;
 
   useEffect(() => {
     cargarUsuarios();
+    cargarConjuntos();
   }, []);
+
+  const cargarConjuntos = async () => {
+    try {
+      const response = await conjuntoService.obtenerTodos();
+      setConjuntos(response.conjuntos || []);
+    } catch (error) {
+      console.error('Error al cargar conjuntos:', error);
+      setConjuntos([
+        { id: 1, nombre_conjunto: 'Conjunto Primavera', direccion: 'Calle 45 #12-34', estado: 'activo' },
+        { id: 2, nombre_conjunto: 'Conjunto Verano', direccion: 'Carrera 23 #45-67', estado: 'activo' },
+        { id: 3, nombre_conjunto: 'Conjunto Otoño', direccion: 'Avenida 15 #89-12', estado: 'activo' },
+        { id: 4, nombre_conjunto: 'Conjunto Invierno', direccion: 'Transversal 78 #34-56', estado: 'inactivo' }
+      ]);
+    }
+  };
 
   const cargarUsuarios = async () => {
     setLoading(true);
@@ -45,28 +71,57 @@ export default function UsuarioComponent() {
   };
 
   const handleSubmit = async (formData) => {
+    // Cerrar modal inmediatamente
+    cerrarModal();
+    setNotificacionVisible(true);
+    
+    // Procesar en segundo plano
     try {
       if (modoModal === 'crear') {
-        await authService.register(
-          formData.nombre,
-          formData.apellido,
-          formData.email,
-          formData.telefono,
-          formData.cedula,
-          formData.usuario,
-          formData.contraseña
-        );
-        alert('Usuario creado exitosamente');
+        // Crear usuario con todos los campos
+        await usuarioService.crear({
+          nombre: formData.nombre,
+          apellido: formData.apellido,
+          email: formData.email,
+          telefono: formData.telefono,
+          cedula: formData.cedula,
+          usuario: formData.usuario,
+          contraseña: formData.contraseña,
+          tipo_usuario: formData.tipo_usuario,
+          estado: formData.estado,
+          conjuntos: formData.conjuntos || []
+        });
       } else {
         await usuarioService.actualizar(usuarioEditando.id, formData);
-        alert('Usuario actualizado exitosamente');
       }
-      cerrarModal();
       cargarUsuarios();
     } catch (error) {
       console.error('Error al guardar usuario:', error);
       alert(error.response?.data?.error || 'Error al guardar usuario');
     }
+  };
+
+  const handleEliminar = async (usuario) => {
+    setUsuarioAEliminar(usuario);
+    setModalConfirmacionAbierto(true);
+  };
+
+  const confirmarEliminacion = async () => {
+    try {
+      await usuarioService.eliminar(usuarioAEliminar.id);
+      setModalConfirmacionAbierto(false);
+      setUsuarioAEliminar(null);
+      cargarUsuarios();
+      setNotificacionVisible(true);
+    } catch (error) {
+      console.error('Error al eliminar usuario:', error);
+      alert(error.response?.data?.error || 'Error al eliminar usuario');
+    }
+  };
+
+  const cancelarEliminacion = () => {
+    setModalConfirmacionAbierto(false);
+    setUsuarioAEliminar(null);
   };
 
   const getRolClass = (tipo_usuario) => {
@@ -93,6 +148,12 @@ export default function UsuarioComponent() {
     );
   }
 
+  // Calcular usuarios para la página actual
+  const indiceUltimo = paginaActual * usuariosPorPagina;
+  const indicePrimero = indiceUltimo - usuariosPorPagina;
+  const usuariosActuales = usuarios.slice(indicePrimero, indiceUltimo);
+  const totalPaginas = Math.ceil(usuarios.length / usuariosPorPagina);
+
   return (
     <div className="contenedor-usuarios">
       <div className="encabezado-seccion">
@@ -100,7 +161,7 @@ export default function UsuarioComponent() {
         <div className="acciones-encabezado">
           <p className="subtitulo-seccion">Total: {usuarios.length} usuarios</p>
           <button className="boton-nuevo" onClick={abrirModalCrear}>
-            + Nuevo Usuario
+            <FontAwesomeIcon icon={faUserPlus} /> Nuevo Usuario
           </button>
         </div>
       </div>
@@ -109,65 +170,140 @@ export default function UsuarioComponent() {
         <table className="tabla-usuarios">
           <thead>
             <tr>
-              <th>Usuario</th>
+              <th>#</th>
+              <th>Nombre</th>
               <th>Email</th>
+              <th>Usuario</th>
+              <th>Cédula</th>
+              <th>Teléfono</th>
+              <th>Conjuntos</th>
               <th>Rol</th>
               <th>Estado</th>
-              <th>Reservas</th>
-              <th>Registro</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {usuarios.map((usuario) => (
-              <tr key={usuario.id}>
-                <td>
-                  <div className="usuario-info">
-                    <div className="avatar-tabla">
-                      {usuario.nombre.charAt(0).toUpperCase()}
-                    </div>
-                    <span className="nombre-usuario">
-                      {usuario.nombre} {usuario.apellido}
-                    </span>
-                  </div>
-                </td>
-                <td>{usuario.email}</td>
-                <td>
-                  <span className={`insignia ${getRolClass(usuario.tipo_usuario)}`}>
-                    {getRolTexto(usuario.tipo_usuario)}
-                  </span>
-                </td>
-                <td>
-                  <span className={`insignia ${getEstadoClass(usuario.estado)}`}>
-                    {usuario.estado}
-                  </span>
-                </td>
-                <td className="centrado">{usuario.Reservas?.length || 0}</td>
-                <td>{new Date(usuario.createdAt).toLocaleDateString('es-ES')}</td>
-                <td>
-                  <div className="acciones-tabla">
-                    <button 
-                      className="boton-tabla boton-ver" 
-                      onClick={() => alert(`Ver detalles de ${usuario.nombre} ${usuario.apellido}`)}
-                      title="Ver detalles"
-                    >brirModalEditar(usuario)
-                      title="Editar usuario"
-                      Editar
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {Array.from({ length: usuariosPorPagina }).map((_, index) => {
+              const usuario = usuariosActuales[index];
+              const numeroFila = indicePrimero + index + 1;
+              if (usuario) {
+                return (
+                  <tr key={usuario.id}>
+                    <td>{numeroFila}</td>
+                    <td>{usuario.nombre} {usuario.apellido}</td>
+                    <td>{usuario.email}</td>
+                    <td>{usuario.usuario}</td>
+                    <td>{usuario.cedula}</td>
+                    <td>{usuario.telefono}</td>
+                    <td>
+                      {usuario.conjuntos && usuario.conjuntos.length > 0
+                        ? usuario.conjuntos.map(c => c.nombre_conjunto || c.nombre).join(', ')
+                        : 'Sin conjuntos'}
+                    </td>
+                    <td>
+                      <span className={`insignia ${getRolClass(usuario.tipo_usuario)}`}>
+                        {getRolTexto(usuario.tipo_usuario)}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`insignia ${getEstadoClass(usuario.estado)}`}>
+                        {usuario.estado}
+                      </span>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        <button
+                          className="boton-editar"
+                          onClick={() => abrirModalEditar(usuario)}
+                          title="Editar usuario"
+                        >
+                          <FontAwesomeIcon icon={faEdit} />
+                        </button>
+                        <button
+                          className="boton-eliminar"
+                          onClick={() => handleEliminar(usuario)}
+                          title="Eliminar usuario"
+                        >
+                          <FontAwesomeIcon icon={faTrash} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              } else {
+                return (
+                  <tr key={`empty-${index}`}>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+                  </tr>
+                );
+              }
+            })}
           </tbody>
         </table>
       </div>
 
+      {totalPaginas > 1 && (
+        <div className="paginacion">
+          {Array.from({ length: totalPaginas }).map((_, index) => {
+            const numeroPagina = index + 1;
+            const mostrarPagina = 
+              numeroPagina === 1 ||
+              numeroPagina === totalPaginas ||
+              (numeroPagina >= paginaActual - 2 && numeroPagina <= paginaActual + 2);
+            
+            if (!mostrarPagina && numeroPagina === paginaActual - 3) {
+              return <span key={numeroPagina} className="puntos-suspensivos">...</span>;
+            }
+            if (!mostrarPagina && numeroPagina === paginaActual + 3) {
+              return <span key={numeroPagina} className="puntos-suspensivos">...</span>;
+            }
+            if (!mostrarPagina) {
+              return null;
+            }
+            
+            return (
+              <button
+                key={numeroPagina}
+                className={`boton-paginacion ${paginaActual === numeroPagina ? 'activo' : ''}`}
+                onClick={() => setPaginaActual(numeroPagina)}
+              >
+                {numeroPagina}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <ModalUsuario
         isOpen={modalAbierto}
         onClose={cerrarModal}
-        onSubmit={handleSubmit}
-        usuario={usuarioEditando}
         modo={modoModal}
+        usuario={usuarioEditando}
+        onSubmit={handleSubmit}
+        conjuntos={conjuntos}
+      />
+
+      <ModalConfirmacion
+        isOpen={modalConfirmacionAbierto}
+        titulo="Confirmar Eliminación"
+        mensaje={`¿Está seguro que desea eliminar al usuario ${usuarioAEliminar?.nombre} ${usuarioAEliminar?.apellido}?`}
+        onConfirmar={confirmarEliminacion}
+        onCancelar={cancelarEliminacion}
+      />
+
+      <Notificacion
+        visible={notificacionVisible}
+        mensaje={modoModal === 'crear' ? 'Usuario creado exitosamente' : 'Usuario actualizado exitosamente'}
+        onClose={() => setNotificacionVisible(false)}
       />
     </div>
   );

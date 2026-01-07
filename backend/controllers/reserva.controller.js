@@ -1,4 +1,4 @@
-const { Reserva, Usuario } = require('../models');
+const { Reserva, Usuario, Area } = require('../models');
 const { Op } = require('sequelize');
 
 const reservaController = {
@@ -35,7 +35,7 @@ const reservaController = {
 
   async obtenerTodas(req, res) {
     try {
-      const { estado, fecha_reserva } = req.query;
+      const { estado, fecha_reserva, areaId, fecha_desde, fecha_hasta } = req.query;
       const whereClause = {};
 
       if (req.usuario.tipo_usuario === 'usuario') {
@@ -44,14 +44,27 @@ const reservaController = {
 
       if (estado) whereClause.estado = estado;
       if (fecha_reserva) whereClause.fecha_reserva = fecha_reserva;
+      if (areaId) whereClause.areaId = areaId;
+      
+      // Filtro de rango de fechas para el calendario
+      if (fecha_desde && fecha_hasta) {
+        whereClause.fecha_reserva = {
+          [Op.between]: [fecha_desde, fecha_hasta]
+        };
+      }
 
       const reservas = await Reserva.findAll({
         where: whereClause,
-        include: [{
-          model: Usuario,
-          as: 'usuario',
-          attributes: ['id', 'nombre', 'apellido', 'email', 'telefono']
-        }],
+        include: [
+          {
+            model: Usuario,
+            attributes: ['id', 'nombre', 'apellido', 'email', 'telefono']
+          },
+          {
+            model: Area,
+            attributes: ['id', 'nombre_area', 'maximo_personas', 'conjuntoId']
+          }
+        ],
         order: [['fecha_reserva', 'DESC'], ['hora_inicio', 'DESC']]
       });
 
