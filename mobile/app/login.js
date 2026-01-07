@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,8 @@ import {
   Platform,
   ScrollView,
   StatusBar,
+  Animated,
+  Keyboard,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { authService } from '../services/api';
@@ -18,25 +20,70 @@ import { Ionicons } from '@expo/vector-icons';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [usuario, setUsuario] = useState('');
+  const [contraseña, setContraseña] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [usuarioError, setUsuarioError] = useState('');
+  const [contraseñaError, setContraseñaError] = useState('');
+  
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  const validateUsuario = (text) => {
+    setUsuario(text);
+    if (text && text.length < 3) {
+      setUsuarioError('Mínimo 3 caracteres');
+    } else {
+      setUsuarioError('');
+    }
+  };
+
+  const validateContraseña = (text) => {
+    setContraseña(text);
+    if (text && text.length < 3) {
+      setContraseñaError('Mínimo 3 caracteres');
+    } else {
+      setContraseñaError('');
+    }
+  };
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Por favor completa todos los campos');
+    Keyboard.dismiss();
+    
+    if (!usuario || !contraseña) {
+      Alert.alert('Campos incompletos', 'Por favor completa todos los campos');
+      return;
+    }
+
+    if (usuarioError || contraseñaError) {
+      Alert.alert('Datos inválidos', 'Por favor corrige los errores');
       return;
     }
 
     setLoading(true);
     try {
-      await authService.login(email, password);
-      router.replace('/(tabs)/reservas');
+      await authService.login(usuario, contraseña);
+      router.replace('/(tabs)/areas');
     } catch (error) {
       Alert.alert(
         'Error al iniciar sesión',
-        error.response?.data?.error || 'Verifica tus credenciales e intenta nuevamente'
+        error.response?.data?.mensaje || error.response?.data?.error || 'Verifica tus credenciales e intenta nuevamente'
       );
     } finally {
       setLoading(false);
@@ -53,61 +100,109 @@ export default function LoginScreen() {
         <ScrollView 
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <View style={styles.header}>
+          <Animated.View 
+            style={[
+              styles.header,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }]
+              }
+            ]}
+          >
             <View style={styles.iconContainer}>
               <Ionicons name="calendar" size={50} color="#fff" />
             </View>
             <Text style={styles.title}>ReservasApp</Text>
-            <Text style={styles.subtitle}>Gestiona tus reservas fácilmente</Text>
-          </View>
+            <Text style={styles.subtitle}>Bienvenido de nuevo</Text>
+          </Animated.View>
 
-          <View style={styles.formContainer}>
-            <View style={styles.inputContainer}>
-              <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Correo electrónico"
-                placeholderTextColor="#999"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                editable={!loading}
-              />
+          <Animated.View 
+            style={[
+              styles.formContainer,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }]
+              }
+            ]}
+          >
+            <View style={styles.inputWrapper}>
+              <View style={[
+                styles.inputContainer,
+                usuarioError && usuario ? styles.inputError : null
+              ]}>
+                <Ionicons name="person-outline" size={20} color="#666" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Usuario"
+                  placeholderTextColor="#999"
+                  value={usuario}
+                  onChangeText={validateUsuario}
+                  autoCapitalize="none"
+                  editable={!loading}
+                  autoComplete="username"
+                  returnKeyType="next"
+                />
+              </View>
+              {usuarioError && usuario ? (
+                <Text style={styles.errorText}>{usuarioError}</Text>
+              ) : null}
             </View>
 
-            <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Contraseña"
-                placeholderTextColor="#999"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                editable={!loading}
-              />
-              <TouchableOpacity 
-                onPress={() => setShowPassword(!showPassword)}
-                style={styles.eyeIcon}
-              >
-                <Ionicons 
-                  name={showPassword ? "eye-off-outline" : "eye-outline"} 
-                  size={20} 
-                  color="#666" 
+            <View style={styles.inputWrapper}>
+              <View style={[
+                styles.inputContainer,
+                contraseñaError && contraseña ? styles.inputError : null
+              ]}>
+                <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Contraseña"
+                  placeholderTextColor="#999"
+                  value={contraseña}
+                  onChangeText={validateContraseña}
+                  secureTextEntry={!showPassword}
+                  editable={!loading}
+                  autoComplete="password"
+                  returnKeyType="go"
+                  onSubmitEditing={handleLogin}
                 />
-              </TouchableOpacity>
+                <TouchableOpacity 
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={styles.eyeIcon}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Ionicons 
+                    name={showPassword ? "eye-off-outline" : "eye-outline"} 
+                    size={20} 
+                    color="#666" 
+                  />
+                </TouchableOpacity>
+              </View>
+              {contraseñaError && contraseña ? (
+                <Text style={styles.errorText}>{contraseñaError}</Text>
+              ) : null}
             </View>
 
             <TouchableOpacity
-              style={[styles.button, loading && styles.buttonDisabled]}
+              style={styles.forgotPassword}
+              onPress={() => Alert.alert('Recuperar contraseña', 'Funcionalidad próximamente')}
+            >
+              <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.button,
+                (loading || !usuario || !contraseña || usuarioError || contraseñaError) && styles.buttonDisabled
+              ]}
               onPress={handleLogin}
-              disabled={loading}
+              disabled={loading || !usuario || !contraseña || !!usuarioError || !!contraseñaError}
               activeOpacity={0.8}
             >
               {loading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color="#fff" size="small" />
               ) : (
                 <>
                   <Text style={styles.buttonText}>Iniciar Sesión</Text>
@@ -115,27 +210,7 @@ export default function LoginScreen() {
                 </>
               )}
             </TouchableOpacity>
-
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>o</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
-            <TouchableOpacity
-              style={styles.registerButton}
-              onPress={() => router.push('/register')}
-              disabled={loading}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.registerButtonText}>Crear cuenta nueva</Text>
-            </TouchableOpacity>
-          </View>
-
-          <Text style={styles.footer}>
-            ¿Olvidaste tu contraseña?{' '}
-            <Text style={styles.footerLink}>Recuperar</Text>
-          </Text>
+          </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
     </>

@@ -1,9 +1,7 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Cambiar esta URL por la IP de tu computadora cuando pruebes en dispositivo físico
-// Ejemplo: const API_URL = 'http://192.168.1.10:3000/api';
-const API_URL = 'http://localhost:3000/api';
+const API_URL = 'http://192.168.1.108:10000/api';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -13,7 +11,6 @@ const api = axios.create({
   },
 });
 
-// Interceptor para agregar token a las peticiones
 api.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem('token');
@@ -27,22 +24,20 @@ api.interceptors.request.use(
   }
 );
 
-// Interceptor para manejar errores de autenticación
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
       await AsyncStorage.removeItem('token');
       await AsyncStorage.removeItem('usuario');
-      // Aquí puedes redirigir al login si lo necesitas
     }
     return Promise.reject(error);
   }
 );
 
 export const authService = {
-  async login(email, password) {
-    const response = await api.post('/auth/login', { email, password });
+  async login(usuario, contraseña) {
+    const response = await api.post('/auth/login', { usuario, contraseña });
     if (response.data.token) {
       await AsyncStorage.setItem('token', response.data.token);
       await AsyncStorage.setItem('usuario', JSON.stringify(response.data.usuario));
@@ -114,6 +109,50 @@ export const reservaService = {
 
   async eliminar(id) {
     const response = await api.delete(`/reservas/${id}`);
+    return response.data;
+  },
+};
+
+export const conjuntoService = {
+  async obtenerTodos() {
+    const response = await api.get('/conjuntos');
+    return response.data;
+  },
+
+  async crear(conjuntoData) {
+    const response = await api.post('/conjuntos', conjuntoData);
+    return response.data;
+  },
+
+  async actualizar(id, conjuntoData) {
+    const response = await api.put(`/conjuntos/${id}`, conjuntoData);
+    return response.data;
+  },
+
+  async eliminar(id) {
+    const response = await api.delete(`/conjuntos/${id}`);
+    return response.data;
+  },
+};
+
+export const areaService = {
+  async obtenerTodas() {
+    const response = await api.get('/areas');
+    return response.data;
+  },
+
+  async crear(areaData) {
+    const response = await api.post('/areas', areaData);
+    return response.data;
+  },
+
+  async actualizar(id, areaData) {
+    const response = await api.put(`/areas/${id}`, areaData);
+    return response.data;
+  },
+
+  async eliminar(id) {
+    const response = await api.delete(`/areas/${id}`);
     return response.data;
   },
 };

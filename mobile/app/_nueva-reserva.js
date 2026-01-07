@@ -10,7 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { reservaService } from '../../services/api';
+import { reservaService } from '../services/api';
 
 export default function NuevaReservaScreen() {
   const router = useRouter();
@@ -61,7 +61,7 @@ export default function NuevaReservaScreen() {
             setNotas('');
             setPrecio('');
             // Navegar a reservas
-            router.push('/(tabs)/reservas');
+            router.push('/(tabs)/areas');
           },
         },
       ]);

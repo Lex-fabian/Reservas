@@ -136,7 +136,9 @@
 }
 
 .boton-editar,
-.boton-eliminar {
+.boton-eliminar,
+.boton-confirmar,
+.boton-rechazar {
   background: transparent;
   border: none;
   cursor: pointer;
@@ -167,6 +169,24 @@
 .boton-eliminar:hover {
   background: #fef2f2;
   color: #dc2626;
+}
+
+.boton-confirmar {
+  color: #10b981;
+}
+
+.boton-confirmar:hover {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.boton-rechazar {
+  color: #f59e0b;
+}
+
+.boton-rechazar:hover {
+  background: #fffbeb;
+  color: #d97706;
 }
 
 .paginacion {

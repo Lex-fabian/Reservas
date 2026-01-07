@@ -1,33 +1,41 @@
 import { Tabs } from 'expo-router';
-import { Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#007AFF',
+        tabBarActiveTintColor: '#4a90e2',
+        tabBarInactiveTintColor: '#999',
         headerShown: true,
+        tabBarStyle: {
+          height: 75,
+          paddingBottom: 12,
+          paddingTop: 12,
+        },
       }}
     >
       <Tabs.Screen
-        name="reservas"
+        name="areas"
         options={{
-          title: 'Mis Reservas',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 24 }}>📅</Text>,
+          title: 'Inicio',
+          headerShown: false,
+          tabBarIcon: ({ color }) => <Ionicons name="home-outline" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="nueva-reserva"
+        name="historial-reserva"
         options={{
-          title: 'Nueva Reserva',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 24 }}>➕</Text>,
+          title: 'Historial',
+          headerShown: false,
+          tabBarIcon: ({ color }) => <Ionicons name="list-outline" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="perfil"
         options={{
           title: 'Perfil',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 24 }}>👤</Text>,
+          tabBarIcon: ({ color }) => <Ionicons name="person-outline" size={24} color={color} />,
         }}
       />
     </Tabs>

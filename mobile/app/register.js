@@ -32,7 +32,7 @@ export default function RegisterScreen() {
     try {
       await authService.register(nombre, email, password, telefono);
       Alert.alert('Éxito', 'Registro exitoso', [
-        { text: 'OK', onPress: () => router.replace('/(tabs)/reservas') }
+        { text: 'OK', onPress: () => router.replace('/(tabs)/areas') }
       ]);
     } catch (error) {
       Alert.alert(

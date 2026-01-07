@@ -18,5 +18,5 @@ export default function Index() {
     return null; // Mostrar splash screen
   }
 
-  return <Redirect href={isLoggedIn ? "/(tabs)/reservas" : "/login"} />;
+  return <Redirect href={isLoggedIn ? "/(tabs)/areas" : "/login"} />;
 }

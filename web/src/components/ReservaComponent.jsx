@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { reservaService } from '../services/api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faPlus, faEye } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faPlus, faEye, faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 import ModalReserva from './ModalReserva';
 import ModalConfirmacion from './ModalConfirmacion';
 import Notificacion from './Notificacion';
@@ -18,6 +18,8 @@ export default function ReservaComponent() {
   const [notificacionVisible, setNotificacionVisible] = useState(false);
   const [modalConfirmacionAbierto, setModalConfirmacionAbierto] = useState(false);
   const [reservaAEliminar, setReservaAEliminar] = useState(null);
+  const [accionConfirmacion, setAccionConfirmacion] = useState(''); // 'cancelar', 'confirmar', 'rechazar'
+  const [mensajeConfirmacion, setMensajeConfirmacion] = useState('');
 
   useEffect(() => {
     cargarReservas();
@@ -74,25 +76,51 @@ export default function ReservaComponent() {
 
   const handleEliminar = (reserva) => {
     setReservaAEliminar(reserva);
+    setAccionConfirmacion('cancelar');
+    setMensajeConfirmacion('¿Está seguro que desea cancelar la reserva?');
+    setModalConfirmacionAbierto(true);
+  };
+
+  const handleConfirmar = (reserva) => {
+    setReservaAEliminar(reserva);
+    setAccionConfirmacion('confirmar');
+    setMensajeConfirmacion('¿Está seguro que desea confirmar esta reserva?');
+    setModalConfirmacionAbierto(true);
+  };
+
+  const handleRechazar = (reserva) => {
+    setReservaAEliminar(reserva);
+    setAccionConfirmacion('rechazar');
+    setMensajeConfirmacion('¿Está seguro que desea rechazar esta reserva?');
     setModalConfirmacionAbierto(true);
   };
 
   const confirmarEliminacion = async () => {
     try {
-      await reservaService.cancelar(reservaAEliminar.id);
+      if (accionConfirmacion === 'confirmar') {
+        await reservaService.confirmar(reservaAEliminar.id);
+        setNotificacionVisible(true);
+      } else if (accionConfirmacion === 'rechazar') {
+        await reservaService.cancelar(reservaAEliminar.id, 'Rechazada por el administrador');
+        setNotificacionVisible(true);
+      } else {
+        await reservaService.cancelar(reservaAEliminar.id);
+        setNotificacionVisible(true);
+      }
       setModalConfirmacionAbierto(false);
       setReservaAEliminar(null);
+      setAccionConfirmacion('');
       cargarReservas();
-      setNotificacionVisible(true);
     } catch (error) {
-      console.error('Error al eliminar reserva:', error);
-      alert('Error al eliminar reserva');
+      console.error('Error al procesar la acción:', error);
+      alert('Error al procesar la acción');
     }
   };
 
   const cancelarEliminacion = () => {
     setModalConfirmacionAbierto(false);
     setReservaAEliminar(null);
+    setAccionConfirmacion('');
   };
 
   const getEstadoClass = (estado) => {
@@ -164,21 +192,44 @@ export default function ReservaComponent() {
                       </span>
                     </td>
                     <td>
-                      <div style={{ display: 'flex', gap: '4px' }}>
-                        <button
-                          className="boton-editar"
-                          onClick={() => abrirModalEditar(reserva)}
-                          title="Ver reserva"
-                        >
-                          <FontAwesomeIcon icon={faEye} />
-                        </button>
-                        <button
-                          className="boton-eliminar"
-                          onClick={() => handleEliminar(reserva)}
-                          title="Cancelar reserva"
-                        >
-                          <FontAwesomeIcon icon={faTrash} />
-                        </button>
+                      <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
+                        {reserva.estado === 'pendiente' ? (
+                          <>
+                            <button
+                              className="boton-confirmar"
+                              onClick={() => handleConfirmar(reserva)}
+                              title="Confirmar reserva"
+                            >
+                              <FontAwesomeIcon icon={faCheck} />
+                            </button>
+                            <button
+                              className="boton-rechazar"
+                              onClick={() => handleRechazar(reserva)}
+                              title="Rechazar reserva"
+                            >
+                              <FontAwesomeIcon icon={faTimes} />
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              className="boton-editar"
+                              onClick={() => abrirModalEditar(reserva)}
+                              title="Ver reserva"
+                            >
+                              <FontAwesomeIcon icon={faEye} />
+                            </button>
+                            {reserva.estado !== 'cancelada' && (
+                              <button
+                                className="boton-eliminar"
+                                onClick={() => handleEliminar(reserva)}
+                                title="Cancelar reserva"
+                              >
+                                <FontAwesomeIcon icon={faTrash} />
+                              </button>
+                            )}
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -244,15 +295,23 @@ export default function ReservaComponent() {
 
       <ModalConfirmacion
         isOpen={modalConfirmacionAbierto}
-        titulo="Confirmar Cancelación"
-        mensaje={`¿Está seguro que desea cancelar la reserva?`}
+        titulo={accionConfirmacion === 'confirmar' ? 'Confirmar Reserva' : accionConfirmacion === 'rechazar' ? 'Rechazar Reserva' : 'Confirmar Cancelación'}
+        mensaje={mensajeConfirmacion}
         onConfirmar={confirmarEliminacion}
         onCancelar={cancelarEliminacion}
       />
 
       <Notificacion
         visible={notificacionVisible}
-        mensaje={modoModal === 'crear' ? 'Reserva creada exitosamente' : 'Reserva actualizada exitosamente'}
+        mensaje={
+          accionConfirmacion === 'confirmar' 
+            ? 'Reserva confirmada exitosamente' 
+            : accionConfirmacion === 'rechazar'
+            ? 'Reserva rechazada exitosamente'
+            : modoModal === 'crear' 
+            ? 'Reserva creada exitosamente' 
+            : 'Reserva actualizada exitosamente'
+        }
         onClose={() => setNotificacionVisible(false)}
       />
     </div>

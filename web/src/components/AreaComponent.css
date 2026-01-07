@@ -219,7 +219,6 @@
   padding: 0 4px;
 }
 
-/* Loading */
 .contenedor-areas .cargando {
   text-align: center;
   padding: 40px 20px;
@@ -228,7 +227,6 @@
   font-weight: 400;
 }
 
-/* Responsive */
 @media (max-width: 1024px) {
   .tabla-wrapper {
     overflow-x: auto;

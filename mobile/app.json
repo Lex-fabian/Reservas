@@ -4,12 +4,10 @@
     "slug": "reservasapp",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#4a90e2"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -19,15 +17,20 @@
       "bundleIdentifier": "com.reservasapp.mobile"
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
       "package": "com.reservasapp.mobile"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "bundler": "metro"
     },
-    "scheme": "reservasapp"
+    "scheme": "reservasapp",
+    "plugins": [
+      "expo-asset",
+      "@react-native-community/datetimepicker"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "706b4e1f-74f8-4f99-b637-d11b37b1e0d2"
+      }
+    }
   }
 }
