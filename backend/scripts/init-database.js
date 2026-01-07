@@ -1,51 +1,71 @@
 const mysql = require('mysql2/promise');
+const bcrypt = require('bcryptjs');
 const fs = require('fs').promises;
 const path = require('path');
 require('dotenv').config();
 
 async function initDatabase() {
-  console.log('🔄 Iniciando base de datos...');
+  console.log(' Iniciando base de datos...');
   
   let connection;
   
   try {
-    // Conectar a MySQL (sin seleccionar base de datos específica)
     connection = await mysql.createConnection({
       host: process.env.DB_HOST,
       port: parseInt(process.env.DB_PORT) || 3306,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      multipleStatements: true, // Permitir múltiples queries
+      multipleStatements: true,
       ssl: process.env.DB_SSL === 'true' ? {
         rejectUnauthorized: false
       } : undefined
     });
 
-    console.log('✅ Conectado a MySQL');
+    console.log(' Conectado a MySQL');
 
-    // Leer el archivo schema.sql
     const schemaPath = path.join(__dirname, '../../database/schema.sql');
-    const schema = await fs.readFile(schemaPath, 'utf8');
+    let schema = await fs.readFile(schemaPath, 'utf8');
 
-    console.log('📄 Ejecutando schema.sql...');
+    console.log('Generando contraseñas hasheadas...');
 
-    // Ejecutar el schema completo
+    const adminHash = await bcrypt.hash('admin123', 10);
+    const lexHash = await bcrypt.hash('lex123', 10);
+    const clienteHash = await bcrypt.hash('cliente123', 10);
+
+    schema = schema.replace(/\$2a\$10\$YourHashedPasswordHere/g, (match, offset) => {
+      const beforeMatch = schema.substring(0, offset);
+      const adminCount = (beforeMatch.match(/'admin'/g) || []).length;
+      const lexCount = (beforeMatch.match(/'lex'/g) || []).length;
+      
+      if (adminCount > lexCount) {
+        return adminHash;
+      } else if (lexCount > 0 && schema.substring(offset - 100, offset).includes('lex')) {
+        return lexHash;
+      } else {
+        return clienteHash;
+      }
+    });
+
+    console.log(' Ejecutando schema.sql...');
+
     await connection.query(schema);
 
-    console.log('✅ Base de datos inicializada correctamente');
-    console.log('✅ Tablas creadas: usuarios, conjuntos, areas, reservas');
-    console.log('✅ Datos de ejemplo insertados');
+    console.log(' Base de datos inicializada correctamente');
+    console.log(' Tablas creadas: usuarios, conjuntos, areas, reservas');
+    console.log(' Usuarios de ejemplo:');
+    console.log('   - admin / admin123 (superadmin)');
+    console.log('   - lex / lex123 (usuario)');
+    console.log('   - cliente / cliente123 (usuario)');
     
   } catch (error) {
-    console.error('❌ Error al inicializar la base de datos:', error.message);
+    console.error(' Error al inicializar la base de datos:', error.message);
     process.exit(1);
   } finally {
     if (connection) {
       await connection.end();
-      console.log('🔌 Conexión cerrada');
+      console.log(' Conexión cerrada');
     }
   }
 }
 
-// Ejecutar
 initDatabase();

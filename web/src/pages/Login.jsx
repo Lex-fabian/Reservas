@@ -5,8 +5,8 @@ import '../style/login.css';
 
 export default function Login() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('lex');
-  const [password, setPassword] = useState('lex');
+  const [usuario, setUsuario] = useState('');
+  const [contraseña, setContraseña] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [mostrarPassword, setMostrarPassword] = useState(false);
@@ -15,19 +15,21 @@ export default function Login() {
     e.preventDefault();
     setError('');
 
-    if (!email || !password) {
+    if (!usuario || !contraseña) {
       setError('Por favor completa todos los campos');
       return;
     }
 
     setLoading(true);
     
-    setTimeout(() => {
-      localStorage.setItem('token', 'demo-token');
-      localStorage.setItem('usuario', JSON.stringify({ nombre: email, email: email }));
+    try {
+      await authService.login(usuario, contraseña);
       navigate('/inicio');
+    } catch (error) {
+      setError(error.response?.data?.mensaje || 'Error al iniciar sesión');
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
   return (
@@ -48,8 +50,8 @@ export default function Login() {
           <input
             type="text"
             placeholder="Usuario"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={usuario}
+            onChange={(e) => setUsuario(e.target.value)}
             disabled={loading}
             required
           />
@@ -58,8 +60,8 @@ export default function Login() {
             <input
               type={mostrarPassword ? "text" : "password"}
               placeholder="Contraseña"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={contraseña}
+              onChange={(e) => setContraseña(e.target.value)}
               disabled={loading}
               required
             />
@@ -74,7 +76,7 @@ export default function Login() {
           </div>
 
           <button type="submit" className="boton-primario" disabled={loading}>
-            {loading ? '...' : 'Entrar'}
+            {loading ? 'Ingresando...' : 'Entrar'}
           </button>
         </form>
       </div>

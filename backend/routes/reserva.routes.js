@@ -3,7 +3,6 @@ const router = express.Router();
 const reservaController = require('../controllers/reserva.controller');
 const { verificarToken, esAdmin } = require('../middleware/auth');
 
-// Todas las rutas requieren autenticación
 router.use(verificarToken);
 
 router.post('/', reservaController.crear);

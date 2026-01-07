@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { reservaService } from '../services/api';
-import { authService } from '../services/api';
+import { reservaService, authService } from '../services/api';
 import UsuarioComponent from '../components/UsuarioComponent';
 import ConjuntoComponent from '../components/ConjuntoComponent';
+import AreaComponent from '../components/AreaComponent';
 import '../style/Inicio.css';
 
 export default function Inicio() {
@@ -87,6 +87,12 @@ export default function Inicio() {
             >
               🏘️ Conjuntos
             </button>
+            <button 
+              className={`boton-nav ${vistaActual === 'areas' ? 'activo' : ''}`}
+              onClick={() => setVistaActual('areas')}
+            >
+              🎯 Áreas
+            </button>
           </div>
           <div 
             className="circulo-perfil"
@@ -129,8 +135,10 @@ export default function Inicio() {
           />
         ) : vistaActual === 'usuarios' ? (
           <UsuarioComponent />
-        ) : (
+        ) : vistaActual === 'conjuntos' ? (
           <ConjuntoComponent />
+        ) : (
+          <AreaComponent />
         )}
       </div>
     </div>

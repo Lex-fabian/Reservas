@@ -14,11 +14,37 @@
   color: #1f2937;
 }
 
+.acciones-encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
 .subtitulo-seccion {
   margin: 0;
   font-size: 15px;
   color: #6b7280;
   font-weight: 500;
+}
+
+.boton-nuevo {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+.boton-nuevo:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
 }
 
 /* Tabla de Usuarios */

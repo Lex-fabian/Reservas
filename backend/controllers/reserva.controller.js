@@ -2,24 +2,24 @@ const { Reserva, Usuario } = require('../models');
 const { Op } = require('sequelize');
 
 const reservaController = {
-  // Crear nueva reserva
   async crear(req, res) {
     try {
-      const { servicio, fecha, hora, duracion, notas, precio } = req.body;
+      const { conjuntoId, areaId, fecha_reserva, hora_inicio, hora_fin, personas, observaciones } = req.body;
       const usuarioId = req.usuario.id;
 
-      if (!servicio || !fecha || !hora) {
-        return res.status(400).json({ error: 'Servicio, fecha y hora son requeridos' });
+      if (!conjuntoId || !areaId || !fecha_reserva || !hora_inicio || !hora_fin || !personas) {
+        return res.status(400).json({ error: 'Todos los campos son requeridos' });
       }
 
       const reserva = await Reserva.create({
         usuarioId,
-        servicio,
-        fecha,
-        hora,
-        duracion: duracion || 60,
-        notas,
-        precio,
+        conjuntoId,
+        areaId,
+        fecha_reserva,
+        hora_inicio,
+        hora_fin,
+        personas,
+        observaciones,
         estado: 'pendiente'
       });
 
@@ -33,29 +33,26 @@ const reservaController = {
     }
   },
 
-  // Obtener todas las reservas (admin ve todas, cliente solo las suyas)
   async obtenerTodas(req, res) {
     try {
-      const { estado, fecha } = req.query;
+      const { estado, fecha_reserva } = req.query;
       const whereClause = {};
 
-      // Si no es admin, solo ver sus reservas
-      if (req.usuario.rol !== 'admin') {
+      if (req.usuario.tipo_usuario === 'usuario') {
         whereClause.usuarioId = req.usuario.id;
       }
 
-      // Filtros opcionales
       if (estado) whereClause.estado = estado;
-      if (fecha) whereClause.fecha = fecha;
+      if (fecha_reserva) whereClause.fecha_reserva = fecha_reserva;
 
       const reservas = await Reserva.findAll({
         where: whereClause,
         include: [{
           model: Usuario,
           as: 'usuario',
-          attributes: ['id', 'nombre', 'email', 'telefono']
+          attributes: ['id', 'nombre', 'apellido', 'email', 'telefono']
         }],
-        order: [['fecha', 'DESC'], ['hora', 'DESC']]
+        order: [['fecha_reserva', 'DESC'], ['hora_inicio', 'DESC']]
       });
 
       res.json({ reservas });

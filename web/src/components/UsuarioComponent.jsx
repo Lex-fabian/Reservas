@@ -1,9 +1,14 @@
 import { useState, useEffect } from 'react';
+import { usuarioService, authService } from '../services/api';
+import ModalUsuario from './ModalUsuario';
 import './UsuarioComponent.css';
 
 export default function UsuarioComponent() {
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [modalAbierto, setModalAbierto] = useState(false);
+  const [usuarioEditando, setUsuarioEditando] = useState(null);
+  const [modoModal, setModoModal] = useState('crear');
 
   useEffect(() => {
     cargarUsuarios();
@@ -12,60 +17,72 @@ export default function UsuarioComponent() {
   const cargarUsuarios = async () => {
     setLoading(true);
     try {
-      setTimeout(() => {
-        const usuariosMock = [
-          {
-            id: 1,
-            nombre: 'Lex',
-            email: 'lex@example.com',
-            rol: 'admin',
-            estado: 'activo',
-            reservas: 5,
-            fechaRegistro: '2024-01-15'
-          },
-          {
-            id: 2,
-            nombre: 'María González',
-            email: 'maria@example.com',
-            rol: 'usuario',
-            estado: 'activo',
-            reservas: 3,
-            fechaRegistro: '2024-02-20'
-          },
-          {
-            id: 3,
-            nombre: 'Carlos López',
-            email: 'carlos@example.com',
-            rol: 'usuario',
-            estado: 'activo',
-            reservas: 8,
-            fechaRegistro: '2024-01-10'
-          },
-          {
-            id: 4,
-            nombre: 'Ana Martínez',
-            email: 'ana@example.com',
-            rol: 'usuario',
-            estado: 'inactivo',
-            reservas: 1,
-            fechaRegistro: '2024-03-05'
-          }
-        ];
-        setUsuarios(usuariosMock);
-        setLoading(false);
-      }, 500);
+      const response = await usuarioService.obtenerTodos();
+      setUsuarios(response.usuarios || []);
     } catch (error) {
       console.error('Error al cargar usuarios:', error);
+      alert('Error al cargar usuarios');
+    } finally {
       setLoading(false);
     }
   };
 
-  const getRolClass = (rol) => {
-    return rol === 'admin' ? 'insignia-admin' : 'insignia-usuario';
+  const abrirModalCrear = () => {
+    setModoModal('crear');
+    setUsuarioEditando(null);
+    setModalAbierto(true);
+  };
+
+  const abrirModalEditar = (usuario) => {
+    setModoModal('editar');
+    setUsuarioEditando(usuario);
+    setModalAbierto(true);
+  };
+
+  const cerrarModal = () => {
+    setModalAbierto(false);
+    setUsuarioEditando(null);
+  };
+
+  const handleSubmit = async (formData) => {
+    try {
+      if (modoModal === 'crear') {
+        await authService.register(
+          formData.nombre,
+          formData.apellido,
+          formData.email,
+          formData.telefono,
+          formData.cedula,
+          formData.usuario,
+          formData.contraseña
+        );
+        alert('Usuario creado exitosamente');
+      } else {
+        await usuarioService.actualizar(usuarioEditando.id, formData);
+        alert('Usuario actualizado exitosamente');
+      }
+      cerrarModal();
+      cargarUsuarios();
+    } catch (error) {
+      console.error('Error al guardar usuario:', error);
+      alert(error.response?.data?.error || 'Error al guardar usuario');
+    }
+  };
+
+  const getRolClass = (tipo_usuario) => {
+    if (tipo_usuario === 'superadmin') return 'insignia-superadmin';
+    if (tipo_usuario === 'admin') return 'insignia-admin';
+    return 'insignia-usuario';
   };
 
   const getEstadoClass = (estado) => {
     return estado === 'activo' ? 'insignia-activo' : 'insignia-inactivo';
+  };
+
+  const getRolTexto = (tipo_usuario) => {
+    if (tipo_usuario === 'superadmin') return 'Super Admin';
+    if (tipo_usuario === 'admin') return 'Admin';
+    return 'Usuario';
   };
 
   if (loading) {
@@ -80,7 +97,12 @@ export default function UsuarioComponent() {
     <div className="contenedor-usuarios">
       <div className="encabezado-seccion">
         <h2>Usuarios Registrados</h2>
-        <p className="subtitulo-seccion">Total: {usuarios.length} usuarios</p>
+        <div className="acciones-encabezado">
+          <p className="subtitulo-seccion">Total: {usuarios.length} usuarios</p>
+          <button className="boton-nuevo" onClick={abrirModalCrear}>
+            + Nuevo Usuario
+          </button>
+        </div>
       </div>
 
       <div className="tabla-wrapper">
@@ -104,13 +126,15 @@ export default function UsuarioComponent() {
                     <div className="avatar-tabla">
                       {usuario.nombre.charAt(0).toUpperCase()}
                     </div>
-                    <span className="nombre-usuario">{usuario.nombre}</span>
+                    <span className="nombre-usuario">
+                      {usuario.nombre} {usuario.apellido}
+                    </span>
                   </div>
                 </td>
                 <td>{usuario.email}</td>
                 <td>
-                  <span className={`insignia ${getRolClass(usuario.rol)}`}>
-                    {usuario.rol === 'admin' ? 'Admin' : 'Usuario'}
+                  <span className={`insignia ${getRolClass(usuario.tipo_usuario)}`}>
+                    {getRolTexto(usuario.tipo_usuario)}
                   </span>
                 </td>
                 <td>
@@ -118,22 +142,16 @@ export default function UsuarioComponent() {
                     {usuario.estado}
                   </span>
                 </td>
-                <td className="centrado">{usuario.reservas}</td>
-                <td>{new Date(usuario.fechaRegistro).toLocaleDateString('es-ES')}</td>
+                <td className="centrado">{usuario.Reservas?.length || 0}</td>
+                <td>{new Date(usuario.createdAt).toLocaleDateString('es-ES')}</td>
                 <td>
                   <div className="acciones-tabla">
                     <button 
                       className="boton-tabla boton-ver" 
-                      onClick={() => alert(`Ver detalles de ${usuario.nombre}`)}
+                      onClick={() => alert(`Ver detalles de ${usuario.nombre} ${usuario.apellido}`)}
                       title="Ver detalles"
-                    >
-                      Ver
-                    </button>
-                    <button 
-                      className="boton-tabla boton-editar" 
-                      onClick={() => alert(`Editar ${usuario.nombre}`)}
+                    >brirModalEditar(usuario)
                       title="Editar usuario"
-                    >
                       Editar
                     </button>
                   </div>
@@ -143,6 +161,14 @@ export default function UsuarioComponent() {
           </tbody>
         </table>
       </div>
+
+      <ModalUsuario
+        isOpen={modalAbierto}
+        onClose={cerrarModal}
+        onSubmit={handleSubmit}
+        usuario={usuarioEditando}
+        modo={modoModal}
+      />
     </div>
   );
 }

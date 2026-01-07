@@ -2,7 +2,7 @@ const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
 // Log de debug para verificar variables de entorno
-console.log('🔍 Verificando configuración de BD:');
+console.log(' Verificando configuración de BD:');
 console.log('DB_HOST:', process.env.DB_HOST || 'NO CONFIGURADO');
 console.log('DB_PORT:', process.env.DB_PORT || 'NO CONFIGURADO');
 console.log('DB_USER:', process.env.DB_USER || 'NO CONFIGURADO');
@@ -36,11 +36,11 @@ const sequelize = new Sequelize(
 const connectDB = async () => {
   try {
     await sequelize.authenticate();
-    console.log('✅ Conexión a MySQL establecida correctamente');
+    console.log('Conexión a MySQL establecida correctamente');
     await sequelize.sync({ alter: false });
-    console.log('✅ Modelos sincronizados con la base de datos');
+    console.log('Modelos sincronizados con la base de datos');
   } catch (error) {
-    console.error('❌ Error conectando a la base de datos:');
+    console.error(' Error conectando a la base de datos:');
     console.error('Mensaje:', error.message);
     console.error('Código:', error.code);
     console.error('Error completo:', error);
