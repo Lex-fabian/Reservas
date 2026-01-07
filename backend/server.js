@@ -13,7 +13,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:10000', 'https://reservas-725o.onrender.com'],
+  origin: ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:10000', 'https://reservas-725o.onrender.com', 'https://reservas-rust.vercel.app'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
