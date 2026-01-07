@@ -1,0 +1,11 @@
+ReservasApp/
+  backend/
+  mobile/
+  web/
+  database/
+
+.git/
+.github/
+node_modules/
+dist/
+*.log
