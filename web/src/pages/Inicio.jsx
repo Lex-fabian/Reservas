@@ -11,7 +11,7 @@ export default function Inicio() {
   const [reservas, setReservas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [usuario, setUsuario] = useState(null);
-  const [vistaActual, setVistaActual] = useState('reservas'); // 'reservas', 'usuarios' o 'conjuntos'
+  const [vistaActual, setVistaActual] = useState('reservas'); 
   const [mostrarModalPerfil, setMostrarModalPerfil] = useState(false);
 
   useEffect(() => {
