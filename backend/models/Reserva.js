@@ -15,39 +15,68 @@ const Reserva = sequelize.define('Reserva', {
       key: 'id'
     }
   },
-  servicio: {
-    type: DataTypes.STRING(100),
-    allowNull: false
+  conjuntoId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'conjuntos',
+      key: 'id'
+    }
   },
-  fecha: {
+  areaId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'areas',
+      key: 'id'
+    }
+  },
+  fecha_reserva: {
     type: DataTypes.DATEONLY,
     allowNull: false
   },
-  hora: {
+  hora_inicio: {
     type: DataTypes.TIME,
     allowNull: false
   },
-  duracion: {
+  hora_fin: {
+    type: DataTypes.TIME,
+    allowNull: false
+  },
+  personas: {
     type: DataTypes.INTEGER,
-    defaultValue: 60,
-    comment: 'Duración en minutos'
+    allowNull: false
+  },
+  foto_comprobante: {
+    type: DataTypes.STRING(255),
+    allowNull: true
   },
   estado: {
     type: DataTypes.ENUM('pendiente', 'confirmada', 'cancelada', 'completada'),
     defaultValue: 'pendiente'
   },
-  notas: {
+  observaciones: {
     type: DataTypes.TEXT,
     allowNull: true
   },
-  precio: {
-    type: DataTypes.DECIMAL(10, 2),
+  cancelado_por: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'usuarios',
+      key: 'id'
+    }
+  },
+  motivo_cancelacion: {
+    type: DataTypes.TEXT,
     allowNull: true
   }
 }, {
   tableName: 'reservas',
   timestamps: true
 });
+
+module.exports = Reserva;
 
 // Relaciones
 const Usuario = require('./Usuario');
