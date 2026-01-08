@@ -68,7 +68,16 @@ const authController = {
         return res.status(400).json({ mensaje: 'Usuario y contraseña son requeridos' });
       }
 
-      const usuarioEncontrado = await Usuario.findOne({ where: { usuario } });
+      const usuarioEncontrado = await Usuario.findOne({ 
+        where: { usuario },
+        include: [{
+          model: Conjunto,
+          as: 'conjuntos',
+          attributes: ['id', 'nombre_conjunto'],
+          through: { attributes: [] }
+        }]
+      });
+      
       if (!usuarioEncontrado) {
         return res.status(401).json({ mensaje: 'Credenciales inválidas' });
       }
@@ -93,7 +102,8 @@ const authController = {
           apellido: usuarioEncontrado.apellido,
           usuario: usuarioEncontrado.usuario,
           email: usuarioEncontrado.email,
-          tipo_usuario: usuarioEncontrado.tipo_usuario
+          tipo_usuario: usuarioEncontrado.tipo_usuario,
+          conjuntos: usuarioEncontrado.conjuntos || []
         }
       });
     } catch (error) {
