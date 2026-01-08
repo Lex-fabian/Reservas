@@ -146,6 +146,30 @@ const reservaController = {
     }
   },
 
+  // Confirmar reserva (solo admin/superadmin)
+  async confirmar(req, res) {
+    try {
+      const { id } = req.params;
+
+      const reserva = await Reserva.findByPk(id);
+
+      if (!reserva) {
+        return res.status(404).json({ error: 'Reserva no encontrada' });
+      }
+
+      reserva.estado = 'confirmada';
+      await reserva.save();
+
+      res.json({
+        message: 'Reserva confirmada exitosamente',
+        reserva
+      });
+    } catch (error) {
+      console.error('Error al confirmar reserva:', error);
+      res.status(500).json({ error: 'Error al confirmar reserva' });
+    }
+  },
+
   // Cancelar reserva
   async cancelar(req, res) {
     try {
