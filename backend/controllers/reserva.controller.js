@@ -35,10 +35,11 @@ const reservaController = {
 
   async obtenerTodas(req, res) {
     try {
-      const { estado, fecha_reserva, areaId, fecha_desde, fecha_hasta } = req.query;
+      const { estado, fecha_reserva, areaId, fecha_desde, fecha_hasta, todas } = req.query;
       const whereClause = {};
 
-      if (req.usuario.tipo_usuario === 'usuario') {
+      // Si no se solicita ver todas y el usuario es tipo 'usuario', filtrar por sus reservas
+      if (req.usuario.tipo_usuario === 'usuario' && todas !== 'true') {
         whereClause.usuarioId = req.usuario.id;
       }
 
