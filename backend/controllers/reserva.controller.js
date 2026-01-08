@@ -93,7 +93,8 @@ const reservaController = {
       }
 
       // Verificar permisos
-      if (req.usuario.rol !== 'admin' && reserva.usuarioId !== req.usuario.id) {
+      const esAdmin = req.usuario.tipo_usuario === 'admin' || req.usuario.tipo_usuario === 'superadmin';
+      if (!esAdmin && reserva.usuarioId !== req.usuario.id) {
         return res.status(403).json({ error: 'No tienes permiso para ver esta reserva' });
       }
 
@@ -117,7 +118,8 @@ const reservaController = {
       }
 
       // Verificar permisos
-      if (req.usuario.rol !== 'admin' && reserva.usuarioId !== req.usuario.id) {
+      const esAdmin = req.usuario.tipo_usuario === 'admin' || req.usuario.tipo_usuario === 'superadmin';
+      if (!esAdmin && reserva.usuarioId !== req.usuario.id) {
         return res.status(403).json({ error: 'No tienes permiso para modificar esta reserva' });
       }
 
@@ -130,7 +132,7 @@ const reservaController = {
       if (precio !== undefined) reserva.precio = precio;
       
       // Solo admin puede cambiar el estado
-      if (estado && req.usuario.rol === 'admin') {
+      if (estado && esAdmin) {
         reserva.estado = estado;
       }
 
@@ -182,7 +184,8 @@ const reservaController = {
       }
 
       // Verificar permisos
-      if (req.usuario.rol !== 'admin' && reserva.usuarioId !== req.usuario.id) {
+      const esAdmin = req.usuario.tipo_usuario === 'admin' || req.usuario.tipo_usuario === 'superadmin';
+      if (!esAdmin && reserva.usuarioId !== req.usuario.id) {
         return res.status(403).json({ error: 'No tienes permiso para cancelar esta reserva' });
       }
 
