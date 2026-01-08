@@ -129,7 +129,7 @@ const usuarioController = {
   async actualizar(req, res) {
     try {
       const { id } = req.params;
-      const { nombre, apellido, email, telefono, cedula, estado, tipo_usuario, conjuntos } = req.body;
+      const { nombre, apellido, email, telefono, cedula, estado, tipo_usuario, contraseña, conjuntos } = req.body;
 
       const usuario = await Usuario.findByPk(id);
 
@@ -137,7 +137,7 @@ const usuarioController = {
         return res.status(404).json({ error: 'Usuario no encontrado' });
       }
 
-      await usuario.update({
+      const updateData = {
         nombre: nombre || usuario.nombre,
         apellido: apellido || usuario.apellido,
         email: email || usuario.email,
@@ -145,7 +145,14 @@ const usuarioController = {
         cedula: cedula || usuario.cedula,
         estado: estado || usuario.estado,
         tipo_usuario: tipo_usuario || usuario.tipo_usuario
-      });
+      };
+
+      // Solo actualizar contraseña si se proporciona
+      if (contraseña && contraseña.trim() !== '') {
+        updateData.contraseña = contraseña;
+      }
+
+      await usuario.update(updateData);
 
       // Actualizar conjuntos si se proporcionan
       if (conjuntos && Array.isArray(conjuntos)) {

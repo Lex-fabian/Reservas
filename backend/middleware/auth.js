@@ -5,7 +5,7 @@ const generarToken = (usuario) => {
     { 
       id: usuario.id, 
       email: usuario.email,
-      rol: usuario.rol 
+      tipo_usuario: usuario.tipo_usuario
     },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
