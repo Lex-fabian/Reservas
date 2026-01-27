@@ -12,6 +12,13 @@ const usuarioRoutes = require('./routes/usuario.routes');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Seguridad
+const helmet = require('helmet');
+const { apiLimiter } = require('./middleware/security');
+
+app.use(helmet());
+app.use(apiLimiter);
+
 app.use(cors({
   origin: ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:10000', 'https://reservas-725o.onrender.com', 'https://reservas-rust.vercel.app'],
   credentials: true,

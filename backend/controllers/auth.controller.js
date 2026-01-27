@@ -6,9 +6,7 @@ const authController = {
     try {
       const { nombre, apellido, email, telefono, cedula, usuario, contraseña, tipo_usuario, conjuntos } = req.body;
 
-      if (!nombre || !apellido || !email || !usuario || !contraseña) {
-        return res.status(400).json({ error: 'Todos los campos obligatorios son requeridos' });
-      }
+      // Validaciones manejadas por express-validator
 
       const usuarioExiste = await Usuario.findOne({ 
         where: { 
@@ -64,9 +62,7 @@ const authController = {
     try {
       const { usuario, contraseña } = req.body;
 
-      if (!usuario || !contraseña) {
-        return res.status(400).json({ mensaje: 'Usuario y contraseña son requeridos' });
-      }
+      // Validaciones manejadas por express-validator
 
       const usuarioEncontrado = await Usuario.findOne({ 
         where: { usuario },
