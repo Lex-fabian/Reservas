@@ -1,37 +1,21 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 require('dotenv').config();
 
-// Configuración del transporter
-// Se asume el uso de Gmail con App Password
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false, // true for 465, false for other ports
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASS
-  },
-  tls: {
-    rejectUnauthorized: false // Permitir certificados autofirmados (solo para desarrollo)
-  },
-  // Timeout más corto para fallar rápido en producción
-  connectionTimeout: 10000, // 10 segundos
-  greetingTimeout: 10000,
-  socketTimeout: 10000
-});
+// Configurar Resend
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const enviarCredenciales = async (email, usuario, contraseña) => {
   try {
-    // Si no hay credenciales configuradas, solo loguear (para dev)
-    if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) {
-      console.warn('⚠️ GMAIL_USER o GMAIL_PASS no configurados. Saltando envío de correo.');
+    // Si no hay API key configurada, solo loguear (para dev)
+    if (!process.env.RESEND_API_KEY) {
+      console.warn('⚠️ RESEND_API_KEY no configurado. Saltando envío de correo.');
       console.log(`[SIMULACIÓN CORREO] Para: ${email} | Usuario: ${usuario} | Pass: ${contraseña}`);
       return false;
     }
 
-    const mailOptions = {
-      from: `"Soporte ReservasApp" <${process.env.GMAIL_USER}>`,
-      to: email,
+    const { data, error } = await resend.emails.send({
+      from: 'ReservasApp <onboarding@resend.dev>', // Usar dominio verificado en producción
+      to: [email],
       subject: 'Bienvenido a ReservasApp - Tus Credenciales',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
@@ -50,10 +34,14 @@ const enviarCredenciales = async (email, usuario, contraseña) => {
           <p style="font-size: 12px; color: #888; text-align: center;">Este es un mensaje automático, por favor no respondas a este correo.</p>
         </div>
       `
-    };
+    });
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Correo enviado: %s', info.messageId);
+    if (error) {
+      console.error('Error de Resend:', error);
+      return false;
+    }
+
+    console.log('✅ Correo enviado exitosamente:', data.id);
     return true;
 
   } catch (error) {
@@ -64,16 +52,16 @@ const enviarCredenciales = async (email, usuario, contraseña) => {
 
 const enviarCambioContraseña = async (email, usuario, nuevaContraseña) => {
   try {
-    // Si no hay credenciales configuradas, solo loguear (para dev)
-    if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) {
-      console.warn('⚠️ GMAIL_USER o GMAIL_PASS no configurados. Saltando envío de correo.');
+    // Si no hay API key configurada, solo loguear (para dev)
+    if (!process.env.RESEND_API_KEY) {
+      console.warn('⚠️ RESEND_API_KEY no configurado. Saltando envío de correo.');
       console.log(`[SIMULACIÓN CORREO - CAMBIO CONTRASEÑA] Para: ${email} | Usuario: ${usuario} | Nueva Pass: ${nuevaContraseña}`);
       return false;
     }
 
-    const mailOptions = {
-      from: `"Soporte ReservasApp" <${process.env.GMAIL_USER}>`,
-      to: email,
+    const { data, error } = await resend.emails.send({
+      from: 'ReservasApp <onboarding@resend.dev>', // Usar dominio verificado en producción
+      to: [email],
       subject: 'ReservasApp - Tu contraseña ha sido actualizada',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
@@ -96,10 +84,14 @@ const enviarCambioContraseña = async (email, usuario, nuevaContraseña) => {
           <p style="font-size: 12px; color: #888; text-align: center;">Este es un mensaje automático, por favor no respondas a este correo.</p>
         </div>
       `
-    };
+    });
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Correo de cambio de contraseña enviado: %s', info.messageId);
+    if (error) {
+      console.error('Error de Resend:', error);
+      return false;
+    }
+
+    console.log('✅ Correo de cambio de contraseña enviado exitosamente:', data.id);
     return true;
 
   } catch (error) {
