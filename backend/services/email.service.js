@@ -4,10 +4,15 @@ require('dotenv').config();
 // Configuración del transporter
 // Se asume el uso de Gmail con App Password
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false, // true for 465, false for other ports
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_PASS
+  },
+  tls: {
+    rejectUnauthorized: false // Permitir certificados autofirmados (solo para desarrollo)
   },
   // Timeout más corto para fallar rápido en producción
   connectionTimeout: 10000, // 10 segundos
