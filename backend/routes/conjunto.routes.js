@@ -12,8 +12,8 @@ router.post('/', esSuperAdmin, conjuntoController.crear);
 router.put('/:id', esSuperAdmin, conjuntoController.actualizar);
 router.delete('/:id', esSuperAdmin, conjuntoController.eliminar);
 
-// Leer conjuntos - Admins necesitan leer para ver sus asignaciones
-router.get('/', esAdminOSuper, conjuntoController.obtenerTodos);
-router.get('/:id', esAdminOSuper, conjuntoController.obtenerPorId);
+// Leer conjuntos - Visible para todos los autenticados (se filtra en controller)
+router.get('/', conjuntoController.obtenerTodos);
+router.get('/:id', conjuntoController.obtenerPorId);
 
 module.exports = router;

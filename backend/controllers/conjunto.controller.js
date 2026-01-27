@@ -1,4 +1,4 @@
-const { Conjunto, Area } = require('../models');
+const { Conjunto, Area, Usuario } = require('../models');
 
 const conjuntoController = {
   async crear(req, res) {
@@ -31,6 +31,32 @@ const conjuntoController = {
       const whereClause = {};
 
       if (estado) whereClause.estado = estado;
+
+      // Restricción RBAC: Si no es SuperAdmin, solo ver conjuntos asignados
+      if (req.usuario.tipo_usuario !== 'superadmin') {
+        // Obtener conjuntos asignados al usuario
+        const usuario = await Usuario.findByPk(req.usuario.id, {
+          include: [{
+            model: Conjunto,
+            as: 'conjuntos',
+            attributes: ['id']
+          }]
+        });
+
+        if (!usuario) {
+           return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+
+        const misConjuntosIds = usuario.conjuntos.map(c => c.id);
+        
+        // Agregar filtro por IDs de conjuntos asignados
+        if (misConjuntosIds.length > 0) {
+          whereClause.id = misConjuntosIds;
+        } else {
+          // Si no tiene conjuntos, retornar arreglo vacío inmediatamente
+           return res.json({ conjuntos: [] });
+        }
+      }
 
       const conjuntos = await Conjunto.findAll({
         where: whereClause,
