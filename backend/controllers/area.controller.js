@@ -4,9 +4,16 @@ const areaController = {
   async crear(req, res) {
     try {
       const { conjuntoId, nombre_area, maximo_personas, fotos, costo, tiempo_minimo, observaciones, estado } = req.body;
-
+      
       if (!conjuntoId || !nombre_area || !maximo_personas) {
         return res.status(400).json({ error: 'Conjunto, nombre y capacidad son requeridos' });
+      }
+
+      // RBAC: Admin solo crea en sus conjuntos
+      if (!req.esSuperAdmin) {
+        if (!req.scopeConjuntos.includes(Number(conjuntoId))) {
+           return res.status(403).json({ error: 'No tienes permiso para crear áreas en este conjunto' });
+        }
       }
 
       const area = await Area.create({

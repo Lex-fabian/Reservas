@@ -28,12 +28,51 @@ const verificarToken = (req, res, next) => {
   }
 };
 
-const esAdmin = (req, res, next) => {
+const { Usuario, Conjunto } = require('../models');
+
+const esSuperAdmin = (req, res, next) => {
   const tipoUsuario = req.usuario.tipo_usuario;
-  if (tipoUsuario !== 'admin' && tipoUsuario !== 'superadmin') {
-    return res.status(403).json({ error: 'Acceso denegado. Se requiere rol de administrador' });
+  if (tipoUsuario !== 'superadmin') {
+    return res.status(403).json({ error: 'Acceso denegado. Se requiere rol de SuperAdmin' });
   }
   next();
 };
 
-module.exports = { generarToken, verificarToken, esAdmin };
+const esAdminOSuper = async (req, res, next) => {
+  try {
+    const tipoUsuario = req.usuario.tipo_usuario;
+    
+    if (tipoUsuario === 'superadmin') {
+      req.esSuperAdmin = true;
+      return next();
+    }
+
+    if (tipoUsuario === 'admin') {
+      // Obtener los conjuntos asignados para scope
+      const usuario = await Usuario.findByPk(req.usuario.id, {
+        include: [{
+          model: Conjunto,
+          as: 'conjuntos',
+          attributes: ['id']
+        }]
+      });
+
+      if (!usuario) {
+        return res.status(401).json({ error: 'Usuario no encontrado' });
+      }
+
+      req.esSuperAdmin = false;
+      // Array de IDs de conjuntos permitidos
+      req.scopeConjuntos = usuario.conjuntos.map(c => c.id);
+      
+      return next();
+    }
+
+    return res.status(403).json({ error: 'Acceso denegado. Se requiere rol de Administrador' });
+  } catch (error) {
+    console.error('Error en middleware RBAC:', error);
+    res.status(500).json({ error: 'Error interno de autorización' });
+  }
+};
+
+module.exports = { generarToken, verificarToken, esSuperAdmin, esAdminOSuper };

@@ -1,16 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const conjuntoController = require('../controllers/conjunto.controller');
-const { verificarToken } = require('../middleware/auth');
+const { verificarToken, esSuperAdmin, esAdminOSuper } = require('../middleware/auth');
 
 // Todas las rutas requieren autenticación
 router.use(verificarToken);
 
 // Rutas CRUD
-router.post('/', conjuntoController.crear);
-router.get('/', conjuntoController.obtenerTodos);
-router.get('/:id', conjuntoController.obtenerPorId);
-router.put('/:id', conjuntoController.actualizar);
-router.delete('/:id', conjuntoController.eliminar);
+// Solo SuperAdmin puede crear/editar/eliminar Conjuntos
+router.post('/', esSuperAdmin, conjuntoController.crear);
+router.put('/:id', esSuperAdmin, conjuntoController.actualizar);
+router.delete('/:id', esSuperAdmin, conjuntoController.eliminar);
+
+// Leer conjuntos - Admins necesitan leer para ver sus asignaciones
+router.get('/', esAdminOSuper, conjuntoController.obtenerTodos);
+router.get('/:id', esAdminOSuper, conjuntoController.obtenerPorId);
 
 module.exports = router;

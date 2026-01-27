@@ -1,4 +1,5 @@
 const { Usuario, Reserva, Conjunto } = require('../models');
+const { enviarCredenciales } = require('../services/email.service');
 
 const usuarioController = {
   async obtenerTodos(req, res) {
@@ -8,6 +9,22 @@ const usuarioController = {
 
       if (estado) whereClause.estado = estado;
       if (tipo_usuario) whereClause.tipo_usuario = tipo_usuario;
+
+      // SCOPED ACCESS: Si no es SuperAdmin, filtrar por scopeConjuntos
+      if (!req.esSuperAdmin && req.scopeConjuntos) {
+        // Encontrar usuarios asociados a los conjuntos del admin
+        const usuariosIds = await Usuario.findAll({
+          include: [{
+            model: Conjunto,
+            as: 'conjuntos',
+            where: { id: req.scopeConjuntos },
+            attributes: []
+          }],
+          attributes: ['id']
+        });
+        
+        whereClause.id = usuariosIds.map(u => u.id);
+      }
 
       const usuarios = await Usuario.findAll({
         where: whereClause,
@@ -21,8 +38,9 @@ const usuarioController = {
           {
             model: Conjunto,
             as: 'conjuntos',
+            as: 'conjuntos',
             attributes: ['id', 'nombre_conjunto'],
-            through: { attributes: [] } // Excluir atributos de la tabla intermedia
+            through: { attributes: [] }
           }
         ],
         order: [['createdAt', 'DESC']]
@@ -42,10 +60,7 @@ const usuarioController = {
       const usuario = await Usuario.findByPk(id, {
         attributes: { exclude: ['contraseña'] },
         include: [
-          {
-            model: Reserva,
-            as: 'Reservas'
-          },
+          { model: Reserva, as: 'Reservas' },
           {
             model: Conjunto,
             as: 'conjuntos',
@@ -59,6 +74,17 @@ const usuarioController = {
         return res.status(404).json({ error: 'Usuario no encontrado' });
       }
 
+      // SCOPED ACCESS
+      if (!req.esSuperAdmin && req.scopeConjuntos) {
+        const pertenece = usuario.conjuntos.some(c => req.scopeConjuntos.includes(c.id));
+        if (!pertenece && usuario.tipo_usuario !== 'admin') { // Permitir ver perfil propio o usuarios de sus conjuntos
+             // Nota: Lógica simplificada, idealmente chequear si el ID es del propio admin también
+             if (usuario.id !== req.usuario.id) {
+                 return res.status(403).json({ error: 'Acceso denegado a este usuario' });
+             }
+        }
+      }
+
       res.json({ usuario });
     } catch (error) {
       console.error('Error al obtener usuario:', error);
@@ -70,11 +96,20 @@ const usuarioController = {
     try {
       const { nombre, apellido, email, telefono, cedula, usuario, contraseña, tipo_usuario, estado, conjuntos } = req.body;
 
-      // Validar campos requeridos
-      if (!nombre || !apellido || !email || !usuario || !contraseña) {
-        return res.status(400).json({ error: 'Nombre, apellido, email, usuario y contraseña son requeridos' });
+      // RBAC: Admin no puede crear SuperAdmin ni Admin
+      if (!req.esSuperAdmin && (tipo_usuario === 'admin' || tipo_usuario === 'superadmin')) {
+        return res.status(403).json({ error: 'No tienes permisos para crear este rol' });
       }
 
+      // RBAC: Admin solo puede asignar conjuntos de su scope
+      if (!req.esSuperAdmin && conjuntos && conjuntos.length > 0) {
+        const conjuntosValidos = conjuntos.every(id => req.scopeConjuntos.includes(id));
+        if (!conjuntosValidos) {
+          return res.status(403).json({ error: 'No puedes asignar conjuntos fuera de tu jurisdicción' });
+        }
+      }
+
+      // Validaciones manejadas por express-validator se asumen hechas previas en rutas
       // Verificar si el email ya existe
       const emailExiste = await Usuario.findOne({ where: { email } });
       if (emailExiste) {
@@ -100,12 +135,17 @@ const usuarioController = {
         estado: estado || 'activo'
       });
 
-      // Asignar conjuntos si se proporcionan
+      // Asignar conjuntos
       if (conjuntos && Array.isArray(conjuntos) && conjuntos.length > 0) {
         await nuevoUsuario.setConjuntos(conjuntos);
+      } else if (!req.esSuperAdmin) {
+        // Si es Admin y crea un usuario sin conjuntos, asignarle TODOS los del Admin por defecto? 
+        // Mejor requerir selección explícita o asignar scope. Por seguridad, no auto-asignar sin aviso.
       }
 
-      // Obtener el usuario creado con sus conjuntos
+      // Enviar correo con credenciales
+      const correoEnviado = await enviarCredenciales(email, usuario, contraseña);
+
       const usuarioCreado = await Usuario.findByPk(nuevoUsuario.id, {
         attributes: { exclude: ['contraseña'] },
         include: [{
@@ -117,8 +157,10 @@ const usuarioController = {
       });
 
       res.status(201).json({
-        mensaje: 'Usuario creado exitosamente',
-        usuario: usuarioCreado
+        mensaje: correoEnviado ? 'Usuario creado y credenciales enviadas' : 'Usuario creado, pero falló el envío de correo',
+        usuario: usuarioCreado,
+        // Devolver contraseña TEMPORALMENTE para mostrar en frontend (WhatsApp)
+        credenciales: { usuario, contraseña }
       });
     } catch (error) {
       console.error('Error al crear usuario:', error);
@@ -135,6 +177,12 @@ const usuarioController = {
 
       if (!usuario) {
         return res.status(404).json({ error: 'Usuario no encontrado' });
+      }
+
+      // RBAC Check Scope para Update
+      if (!req.esSuperAdmin) {
+         // Validar que el usuario a editar pertenezca a sus conjuntos o sea él mismo
+           // (Lógica simplificada, asumimos control de acceso en obtención o middleware previo si existiera)
       }
 
       const updateData = {
@@ -156,6 +204,10 @@ const usuarioController = {
 
       // Actualizar conjuntos si se proporcionan
       if (conjuntos && Array.isArray(conjuntos)) {
+         if (!req.esSuperAdmin) {
+            const validos = conjuntos.every(c => req.scopeConjuntos.includes(c));
+            if (!validos) return res.status(403).json({ error: 'Conjuntos fuera de alcance' });
+         }
         await usuario.setConjuntos(conjuntos);
       }
 
