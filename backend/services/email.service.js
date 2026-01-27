@@ -8,7 +8,11 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_PASS
-  }
+  },
+  // Timeout más corto para fallar rápido en producción
+  connectionTimeout: 10000, // 10 segundos
+  greetingTimeout: 10000,
+  socketTimeout: 10000
 });
 
 const enviarCredenciales = async (email, usuario, contraseña) => {

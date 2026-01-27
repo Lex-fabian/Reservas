@@ -12,6 +12,9 @@ const usuarioRoutes = require('./routes/usuario.routes');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy - IMPORTANTE para Render y otros servicios detrás de proxies
+app.set('trust proxy', 1);
+
 // Seguridad
 const helmet = require('helmet');
 const { apiLimiter } = require('./middleware/security');
