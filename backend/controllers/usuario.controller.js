@@ -1,5 +1,5 @@
 const { Usuario, Reserva, Conjunto } = require('../models');
-const { enviarCredenciales } = require('../services/email.service');
+const { enviarCredenciales, enviarCambioContraseña } = require('../services/email.service');
 
 const usuarioController = {
   async obtenerTodos(req, res) {
@@ -196,8 +196,10 @@ const usuarioController = {
       };
 
       // Solo actualizar contraseña si se proporciona
+      let contraseñaCambiada = false;
       if (contraseña && contraseña.trim() !== '') {
         updateData.contraseña = contraseña;
+        contraseñaCambiada = true;
       }
 
       await usuario.update(updateData);
@@ -211,6 +213,17 @@ const usuarioController = {
         await usuario.setConjuntos(conjuntos);
       }
 
+      // Enviar correo si se cambió la contraseña
+      if (contraseñaCambiada) {
+        try {
+          await enviarCambioContraseña(usuario.email, usuario.usuario, contraseña);
+          console.log(`Correo de cambio de contraseña enviado a ${usuario.email}`);
+        } catch (emailError) {
+          console.error('Error al enviar correo de cambio de contraseña:', emailError);
+          // No fallar la actualización si el correo falla
+        }
+      }
+
       const usuarioActualizado = await Usuario.findByPk(id, {
         attributes: { exclude: ['contraseña'] },
         include: [{
@@ -222,7 +235,9 @@ const usuarioController = {
       });
 
       res.json({
-        mensaje: 'Usuario actualizado exitosamente',
+        mensaje: contraseñaCambiada 
+          ? 'Usuario actualizado y nueva contraseña enviada por correo' 
+          : 'Usuario actualizado exitosamente',
         usuario: usuarioActualizado
       });
     } catch (error) {
