@@ -8,9 +8,9 @@ router.use(verificarToken);
 
 // Rutas CRUD
 router.post('/', esAdminOSuper, areaController.crear);
-router.get('/', esAdminOSuper, areaController.obtenerTodas); // Filtrado en controller
-router.get('/conjunto/:conjuntoId', esAdminOSuper, areaController.obtenerPorConjunto);
-router.get('/:id', esAdminOSuper, areaController.obtenerPorId);
+router.get('/', areaController.obtenerTodas); // Visible para todos los autenticados
+router.get('/conjunto/:conjuntoId', areaController.obtenerPorConjunto); // Visible para todos
+router.get('/:id', areaController.obtenerPorId); // Visible para todos
 router.put('/:id', esAdminOSuper, areaController.actualizar);
 
 // Eliminar - SOLO SUPERADMIN (según requerimiento, admin no elimina)

@@ -1,4 +1,4 @@
-const { Area, Conjunto, Reserva } = require('../models');
+const { Area, Conjunto, Reserva, Usuario } = require('../models');
 
 const areaController = {
   async crear(req, res) {
@@ -42,8 +42,43 @@ const areaController = {
       const { conjuntoId, estado } = req.query;
       const whereClause = {};
 
+      // 1. Filtros básicos del query
       if (conjuntoId) whereClause.conjuntoId = conjuntoId;
       if (estado) whereClause.estado = estado;
+
+      // 2. Filtros de Seguridad (RBAC)
+      // Si NO es SuperAdmin, filtrar por conjuntos asignados al usuario (sea Admin o Cliente)
+      if (req.usuario.tipo_usuario !== 'superadmin') {
+        // Obtener conjuntos asignados al usuario
+        const usuario = await Usuario.findByPk(req.usuario.id, {
+          include: [{
+            model: Conjunto,
+            as: 'conjuntos',
+            attributes: ['id']
+          }]
+        });
+
+        if (!usuario) {
+          return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+
+        const misConjuntosIds = usuario.conjuntos.map(c => c.id);
+        
+        // Si el usuario no tiene conjuntos asignados, no ve ninguna área
+        if (misConjuntosIds.length === 0) {
+          return res.json({ areas: [] });
+        }
+
+        // Si ya había un filtro por conjuntoId, verificar que esté permitido
+        if (whereClause.conjuntoId) {
+          if (!misConjuntosIds.includes(Number(whereClause.conjuntoId))) {
+             return res.status(403).json({ error: 'No tienes acceso a las áreas de este conjunto' });
+          }
+        } else {
+          // Si no había filtro, mostrar todas las áreas de MIS conjuntos
+          whereClause.conjuntoId = misConjuntosIds;
+        }
+      }
 
       const areas = await Area.findAll({
         where: whereClause,
