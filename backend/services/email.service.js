@@ -13,17 +13,29 @@ const enviarCredenciales = async (email, usuario, contraseña) => {
       return false;
     }
 
+    // En modo de prueba (sin dominio verificado), enviar a email del admin
+    const emailDestino = process.env.RESEND_VERIFIED_DOMAIN ? email : 'angello.angulo.jic@gmail.com';
+    const esModoPrueba = !process.env.RESEND_VERIFIED_DOMAIN;
+
     const { data, error } = await resend.emails.send({
       from: 'ReservasApp <onboarding@resend.dev>', // Usar dominio verificado en producción
-      to: [email],
-      subject: 'Bienvenido a ReservasApp - Tus Credenciales',
+      to: [emailDestino],
+      subject: esModoPrueba 
+        ? `[PRUEBA] Credenciales para ${email}` 
+        : 'Bienvenido a ReservasApp - Tus Credenciales',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+          ${esModoPrueba ? `
+            <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-bottom: 20px;">
+              <p style="margin: 0; color: #856404;"><strong>⚠️ MODO DE PRUEBA:</strong> Este email debería enviarse a <strong>${email}</strong> pero Resend requiere dominio verificado. Por favor, comparte estas credenciales manualmente.</p>
+            </div>
+          ` : ''}
           <h2 style="color: #4a90e2; text-align: center;">¡Bienvenido a ReservasApp!</h2>
           <p>Hola,</p>
-          <p>Se ha creado una nueva cuenta de usuario para ti. A continuación encontrarás tus credenciales de acceso:</p>
+          <p>Se ha creado una nueva cuenta de usuario${esModoPrueba ? ` para <strong>${email}</strong>` : ''}. A continuación encontrarás las credenciales de acceso:</p>
           
           <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            ${esModoPrueba ? `<p style="margin: 5px 0;"><strong>Email destinatario:</strong> ${email}</p>` : ''}
             <p style="margin: 5px 0;"><strong>Usuario:</strong> ${usuario}</p>
             <p style="margin: 5px 0;"><strong>Contraseña:</strong> ${contraseña}</p>
           </div>
@@ -41,7 +53,11 @@ const enviarCredenciales = async (email, usuario, contraseña) => {
       return false;
     }
 
-    console.log('✅ Correo enviado exitosamente:', data.id);
+    if (esModoPrueba) {
+      console.log(`⚠️ Correo enviado en modo prueba a ${emailDestino} (destinatario real: ${email}):`, data.id);
+    } else {
+      console.log('✅ Correo enviado exitosamente:', data.id);
+    }
     return true;
 
   } catch (error) {
@@ -59,17 +75,29 @@ const enviarCambioContraseña = async (email, usuario, nuevaContraseña) => {
       return false;
     }
 
+    // En modo de prueba (sin dominio verificado), enviar a email del admin
+    const emailDestino = process.env.RESEND_VERIFIED_DOMAIN ? email : 'angello.angulo.jic@gmail.com';
+    const esModoPrueba = !process.env.RESEND_VERIFIED_DOMAIN;
+
     const { data, error } = await resend.emails.send({
       from: 'ReservasApp <onboarding@resend.dev>', // Usar dominio verificado en producción
-      to: [email],
-      subject: 'ReservasApp - Tu contraseña ha sido actualizada',
+      to: [emailDestino],
+      subject: esModoPrueba 
+        ? `[PRUEBA] Cambio de contraseña para ${email}` 
+        : 'ReservasApp - Tu contraseña ha sido actualizada',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+          ${esModoPrueba ? `
+            <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-bottom: 20px;">
+              <p style="margin: 0; color: #856404;"><strong>⚠️ MODO DE PRUEBA:</strong> Este email debería enviarse a <strong>${email}</strong> pero Resend requiere dominio verificado. Por favor, comparte estas credenciales manualmente.</p>
+            </div>
+          ` : ''}
           <h2 style="color: #4a90e2; text-align: center;">Cambio de Contraseña</h2>
           <p>Hola,</p>
-          <p>Tu contraseña ha sido actualizada exitosamente. A continuación encontrarás tus nuevas credenciales de acceso:</p>
+          <p>Tu contraseña ha sido actualizada exitosamente${esModoPrueba ? ` para <strong>${email}</strong>` : ''}. A continuación encontrarás tus nuevas credenciales de acceso:</p>
           
           <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            ${esModoPrueba ? `<p style="margin: 5px 0;"><strong>Email destinatario:</strong> ${email}</p>` : ''}
             <p style="margin: 5px 0;"><strong>Usuario:</strong> ${usuario}</p>
             <p style="margin: 5px 0;"><strong>Nueva Contraseña:</strong> ${nuevaContraseña}</p>
           </div>
@@ -91,7 +119,11 @@ const enviarCambioContraseña = async (email, usuario, nuevaContraseña) => {
       return false;
     }
 
-    console.log('✅ Correo de cambio de contraseña enviado exitosamente:', data.id);
+    if (esModoPrueba) {
+      console.log(`⚠️ Correo de cambio de contraseña enviado en modo prueba a ${emailDestino} (destinatario real: ${email}):`, data.id);
+    } else {
+      console.log('✅ Correo de cambio de contraseña enviado exitosamente:', data.id);
+    }
     return true;
 
   } catch (error) {
