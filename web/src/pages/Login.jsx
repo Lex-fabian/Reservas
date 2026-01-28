@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/api';
 import '../style/login.css';
 
@@ -24,7 +24,15 @@ export default function Login() {
     
     try {
       await authService.login(usuario, contraseña);
-      navigate('/inicio');
+      
+      // Check role strictly before navigating
+      if (authService.isAdminOrSuper()) {
+        navigate('/inicio');
+      } else {
+        // Not authorized
+        authService.logout();
+        setError('Acceso denegado. Solo administradores pueden acceder.');
+      }
     } catch (error) {
       setError(error.response?.data?.mensaje || 'Error al iniciar sesión');
     } finally {

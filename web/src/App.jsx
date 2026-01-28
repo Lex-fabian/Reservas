@@ -4,7 +4,8 @@ import Login from './pages/Login';
 import Inicio from './pages/Inicio';
 
 function PrivateRoute({ children }) {
-  return authService.isLoggedIn() ? children : <Navigate to="/login" />;
+  const isAuthorized = authService.isLoggedIn() && authService.isAdminOrSuper();
+  return isAuthorized ? children : <Navigate to="/login" />;
 }
 
 function PublicRoute({ children }) {

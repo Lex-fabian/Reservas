@@ -80,6 +80,11 @@ export const authService = {
     const usuario = localStorage.getItem('usuario');
     return usuario ? JSON.parse(usuario) : null;
   },
+
+  isAdminOrSuper() {
+    const usuario = this.getUsuario();
+    return usuario && (usuario.tipo_usuario === 'admin' || usuario.tipo_usuario === 'superadmin');
+  },
 };
 
 export const usuarioService = {

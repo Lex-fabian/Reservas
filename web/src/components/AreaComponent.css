@@ -227,6 +227,19 @@
   font-weight: 400;
 }
 
+.mensaje-sin-datos {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6b7280;
+  background-color: #f9fafb;
+}
+
+.mensaje-sin-datos p {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+}
+
 @media (max-width: 1024px) {
   .tabla-wrapper {
     overflow-x: auto;

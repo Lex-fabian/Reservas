@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClipboardList, faUsers, faBuilding, faBullseye, faUser, faCog, faRightFromBracket } from '@fortawesome/free-solid-svg-icons';
+import logo from '../assets/icono.jpeg';
 import ReservaComponent from '../components/ReservaComponent';
 import UsuarioComponent from '../components/UsuarioComponent';
 import ConjuntoComponent from '../components/ConjuntoComponent';
 import AreaComponent from '../components/AreaComponent';
+import ModalConfirmacion from '../components/ModalConfirmacion';
 import '../style/Inicio.css';
 
 export default function Inicio() {
@@ -14,6 +16,7 @@ export default function Inicio() {
   const [usuario, setUsuario] = useState(null);
   const [vistaActual, setVistaActual] = useState('reservas'); 
   const [mostrarModalPerfil, setMostrarModalPerfil] = useState(false);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
 
   useEffect(() => {
     const user = authService.getUsuario();
@@ -21,17 +24,21 @@ export default function Inicio() {
   }, []);
 
   const handleLogout = () => {
-    if (confirm('¿Estás seguro que deseas salir?')) {
-      authService.logout();
-      navigate('/login');
-    }
+    setMostrarModalPerfil(false);
+    setLogoutModalOpen(true);
+  };
+
+  const confirmarLogout = () => {
+    authService.logout();
+    navigate('/login');
   };
 
   return (
     <div className="panel-principal">
       <nav className="barra-navegacion">
         <div className="marca-navegacion">
-          <h2>ReservasApp</h2>
+          <img src={logo} alt="Logo" className="logo-nav" />
+          <h2>ReservasWeb</h2>
         </div>
         <div className="menu-navegacion">
           <div className="botones-navegacion">
@@ -82,7 +89,7 @@ export default function Inicio() {
               <span className="icono-modal"><FontAwesomeIcon icon={faCog} /></span>
               <span>Ajustes</span>
             </div>
-            <div className="item-modal" onClick={handleLogout}>
+            <div className="item-modal item-logout" onClick={handleLogout}>
               <span className="icono-modal"><FontAwesomeIcon icon={faRightFromBracket} /></span>
               <span>Cerrar Sesión</span>
             </div>
@@ -101,6 +108,16 @@ export default function Inicio() {
           <AreaComponent />
         )}
       </div>
+
+      <ModalConfirmacion
+        isOpen={logoutModalOpen}
+        titulo="Cerrar Sesión"
+        mensaje="¿Estás seguro que deseas salir de la aplicación?"
+        onConfirmar={confirmarLogout}
+        onCancelar={() => setLogoutModalOpen(false)}
+        textoConfirmar="Cerrar Sesión"
+        tipo="peligro"
+      />
     </div>
   );
 }

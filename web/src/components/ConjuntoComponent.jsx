@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { conjuntoService } from '../services/api';
+import { conjuntoService, authService } from '../services/api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash, faPlus } from '@fortawesome/free-solid-svg-icons';
 import ModalConjunto from './ModalConjunto';
@@ -18,8 +18,10 @@ export default function ConjuntoComponent() {
   const [notificacionVisible, setNotificacionVisible] = useState(false);
   const [modalConfirmacionAbierto, setModalConfirmacionAbierto] = useState(false);
   const [conjuntoAEliminar, setConjuntoAEliminar] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
+    setCurrentUser(authService.getUsuario());
     cargarConjuntos();
   }, []);
 
@@ -126,69 +128,80 @@ export default function ConjuntoComponent() {
       </div>
 
       <div className="tabla-wrapper">
-        <table className="tabla-conjuntos">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Nombre del Conjunto</th>
-              <th>Dirección</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Array.from({ length: conjuntosPorPagina }).map((_, index) => {
-              const conjunto = conjuntosActuales[index];
-              const numeroFila = indicePrimero + index + 1;
-              if (conjunto) {
-                return (
-                  <tr key={conjunto.id}>
-                    <td>{numeroFila}</td>
-                    <td>
-                      <div className="conjunto-info">
-                        <span className="nombre-conjunto">{conjunto.nombre_conjunto || conjunto.nombre}</span>
-                      </div>
-                    </td>
-                    <td className="direccion-texto">{conjunto.direccion}</td>
-                    <td>
-                      <span className={`insignia ${getEstadoClass(conjunto.estado)}`}>
-                        {conjunto.estado}
-                      </span>
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '4px' }}>
-                        <button 
-                          className="boton-editar" 
-                          onClick={() => abrirModalEditar(conjunto)}
-                          title="Editar conjunto"
-                        >
-                          <FontAwesomeIcon icon={faEdit} />
-                        </button>
-                        <button 
-                          className="boton-eliminar" 
-                          onClick={() => handleEliminar(conjunto)}
-                          title="Eliminar conjunto"
-                        >
-                          <FontAwesomeIcon icon={faTrash} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              } else {
-                return (
-                  <tr key={`empty-${index}`}>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                  </tr>
-                );
-              }
-            })}
-          </tbody>
-        </table>
+      <div className="tabla-wrapper">
+        {conjuntos.length > 0 ? (
+          <table className="tabla-conjuntos">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Nombre del Conjunto</th>
+                <th>Dirección</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: conjuntosPorPagina }).map((_, index) => {
+                const conjunto = conjuntosActuales[index];
+                const numeroFila = indicePrimero + index + 1;
+                if (conjunto) {
+                  return (
+                    <tr key={conjunto.id}>
+                      <td>{numeroFila}</td>
+                      <td>
+                        <div className="conjunto-info">
+                          <span className="nombre-conjunto">{conjunto.nombre_conjunto || conjunto.nombre}</span>
+                        </div>
+                      </td>
+                      <td className="direccion-texto">{conjunto.direccion}</td>
+                      <td>
+                        <span className={`insignia ${getEstadoClass(conjunto.estado)}`}>
+                          {conjunto.estado}
+                        </span>
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                          <button 
+                            className="boton-editar" 
+                            onClick={() => abrirModalEditar(conjunto)}
+                            title="Editar conjunto"
+                          >
+                            <FontAwesomeIcon icon={faEdit} />
+                          </button>
+                          
+                          {currentUser?.tipo_usuario === 'superadmin' && (
+                            <button 
+                              className="boton-eliminar" 
+                              onClick={() => handleEliminar(conjunto)}
+                              title="Eliminar conjunto"
+                            >
+                              <FontAwesomeIcon icon={faTrash} />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                } else {
+                  return (
+                    <tr key={`empty-${index}`}>
+                      <td>&nbsp;</td>
+                      <td>&nbsp;</td>
+                      <td>&nbsp;</td>
+                      <td>&nbsp;</td>
+                      <td>&nbsp;</td>
+                    </tr>
+                  );
+                }
+              })}
+            </tbody>
+          </table>
+        ) : (
+          <div className="mensaje-sin-datos">
+            <p>No tiene asignado ningún conjunto.</p>
+          </div>
+        )}
+      </div>
       </div>
 
       {totalPaginas > 1 && (

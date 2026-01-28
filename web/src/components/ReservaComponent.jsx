@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { reservaService } from '../services/api';
+import { reservaService, conjuntoService, areaService } from '../services/api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash, faPlus, faEye, faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 import ModalReserva from './ModalReserva';
@@ -18,23 +18,50 @@ export default function ReservaComponent() {
   const [notificacionVisible, setNotificacionVisible] = useState(false);
   const [modalConfirmacionAbierto, setModalConfirmacionAbierto] = useState(false);
   const [reservaAEliminar, setReservaAEliminar] = useState(null);
-  const [accionConfirmacion, setAccionConfirmacion] = useState(''); // 'cancelar', 'confirmar', 'rechazar'
+  const [accionConfirmacion, setAccionConfirmacion] = useState('');
   const [mensajeConfirmacion, setMensajeConfirmacion] = useState('');
+  
+  const [conjuntos, setConjuntos] = useState([]);
+  const [areas, setAreas] = useState([]);
+  const [filtroConjunto, setFiltroConjunto] = useState('');
+  const [filtroArea, setFiltroArea] = useState('');
 
   useEffect(() => {
-    cargarReservas();
+    cargarDatos();
   }, []);
 
-  const cargarReservas = async () => {
+  useEffect(() => {
+    if (filtroConjunto) {
+      cargarAreas(filtroConjunto);
+    } else {
+      setAreas([]);
+      setFiltroArea('');
+    }
+  }, [filtroConjunto]);
+
+  const cargarDatos = async () => {
     setLoading(true);
     try {
-      const response = await reservaService.obtenerTodas();
-      setReservas(response.reservas || []);
+      const [reservasRes, conjuntosRes] = await Promise.all([
+        reservaService.obtenerTodas(),
+        conjuntoService.obtenerTodos()
+      ]);
+      setReservas(reservasRes.reservas || []);
+      setConjuntos(conjuntosRes.conjuntos || []);
     } catch (error) {
-      console.error('Error al cargar reservas:', error);
-      alert('Error al cargar reservas');
+      console.error('Error al cargar datos:', error);
+      alert('Error al cargar datos');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const cargarAreas = async (conjuntoId) => {
+    try {
+      const areasRes = await areaService.obtenerPorConjunto(conjuntoId);
+      setAreas(areasRes);
+    } catch (error) {
+      console.error('Error al cargar áreas:', error);
     }
   };
 
@@ -56,18 +83,16 @@ export default function ReservaComponent() {
   };
 
   const handleSubmit = async (formData) => {
-    // Cerrar modal inmediatamente
     cerrarModal();
     setNotificacionVisible(true);
     
-    // Procesar en segundo plano
     try {
       if (modoModal === 'crear') {
         await reservaService.crear(formData);
       } else {
         await reservaService.actualizar(reservaEditando.id, formData);
       }
-      cargarReservas();
+      cargarDatos(); 
     } catch (error) {
       console.error('Error al guardar reserva:', error);
       alert('Error al guardar reserva');
@@ -110,7 +135,7 @@ export default function ReservaComponent() {
       setModalConfirmacionAbierto(false);
       setReservaAEliminar(null);
       setAccionConfirmacion('');
-      cargarReservas();
+      cargarDatos();
     } catch (error) {
       console.error('Error al procesar la acción:', error);
       alert('Error al procesar la acción');
@@ -141,18 +166,58 @@ export default function ReservaComponent() {
     );
   }
 
-  // Calcular reservas para la página actual
+  const reservasFiltradas = reservas.filter(reserva => {
+    if (filtroConjunto && reserva.conjuntoId !== parseInt(filtroConjunto) && reserva.Area?.conjuntoId !== parseInt(filtroConjunto)) {
+       return false;
+    }
+    if (filtroArea && reserva.areaId !== parseInt(filtroArea)) {
+      return false;
+    }
+    return true;
+  });
+
   const indiceUltimo = paginaActual * reservasPorPagina;
   const indicePrimero = indiceUltimo - reservasPorPagina;
-  const reservasActuales = reservas.slice(indicePrimero, indiceUltimo);
-  const totalPaginas = Math.ceil(reservas.length / reservasPorPagina);
+  const reservasActuales = reservasFiltradas.slice(indicePrimero, indiceUltimo); 
+  const totalPaginas = Math.ceil(reservasFiltradas.length / reservasPorPagina);
 
   return (
     <div className="contenedor-reservas">
       <div className="encabezado-seccion">
-        <h2>Reservas</h2>
+        <div className="titulo-y-contador">
+          <h2>Reservas</h2>
+          <span className="contador-badge">{reservasFiltradas.length}</span>
+        </div>
+
         <div className="acciones-encabezado">
-          <p className="subtitulo-seccion">Total: {reservas.length} reservas</p>
+          <select 
+            className="filtro-select"
+            value={filtroConjunto}
+            onChange={(e) => setFiltroConjunto(e.target.value)}
+          >
+            <option value="">Todos los Conjuntos</option>
+            {Array.isArray(conjuntos) && conjuntos.map(conjunto => (
+              <option key={conjunto.id} value={conjunto.id}>
+                {conjunto.nombre_conjunto}
+              </option>
+            ))}
+          </select>
+
+          {filtroConjunto && (
+            <select 
+              className="filtro-select"
+              value={filtroArea}
+              onChange={(e) => setFiltroArea(e.target.value)}
+            >
+              <option value="">Todas las Áreas</option>
+              {Array.isArray(areas) && areas.map(area => (
+                <option key={area.id} value={area.id}>
+                  {area.nombre_area}
+                </option>
+              ))}
+            </select>
+          )}
+
           <button className="boton-nuevo" onClick={abrirModalCrear}>
             <FontAwesomeIcon icon={faPlus} /> Nueva Reserva
           </button>

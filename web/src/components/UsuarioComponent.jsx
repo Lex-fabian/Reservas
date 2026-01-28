@@ -19,8 +19,11 @@ export default function UsuarioComponent() {
   const [usuarioAEliminar, setUsuarioAEliminar] = useState(null);
   const [paginaActual, setPaginaActual] = useState(1);
   const usuariosPorPagina = 7;
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
+    const user = authService.getUsuario();
+    setCurrentUser(user);
     cargarUsuarios();
     cargarConjuntos();
   }, []);
@@ -212,20 +215,25 @@ export default function UsuarioComponent() {
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: '4px' }}>
-                        <button
-                          className="boton-editar"
-                          onClick={() => abrirModalEditar(usuario)}
-                          title="Editar usuario"
-                        >
-                          <FontAwesomeIcon icon={faEdit} />
-                        </button>
-                        <button
-                          className="boton-eliminar"
-                          onClick={() => handleEliminar(usuario)}
-                          title="Eliminar usuario"
-                        >
-                          <FontAwesomeIcon icon={faTrash} />
-                        </button>
+                        {(currentUser?.tipo_usuario === 'superadmin' || (currentUser?.tipo_usuario === 'admin' && usuario.tipo_usuario !== 'superadmin')) && (
+                          <button
+                            className="boton-editar"
+                            onClick={() => abrirModalEditar(usuario)}
+                            title="Editar usuario"
+                          >
+                            <FontAwesomeIcon icon={faEdit} />
+                          </button>
+                        )}
+                        
+                        {currentUser?.tipo_usuario === 'superadmin' && (
+                          <button
+                            className="boton-eliminar"
+                            onClick={() => handleEliminar(usuario)}
+                            title="Eliminar usuario"
+                          >
+                            <FontAwesomeIcon icon={faTrash} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

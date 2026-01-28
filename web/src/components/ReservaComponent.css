@@ -8,20 +8,39 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.titulo-y-contador {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .encabezado-seccion h2 {
   margin: 0;
-  font-size: 22px;
-  font-weight: 600;
+  font-size: 24px;
+  font-weight: 700;
   color: #1f2937;
+}
+
+.contador-badge {
+  background: #f1f5f9;
+  color: #475569;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid #e2e8f0;
 }
 
 .acciones-encabezado {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .subtitulo-seccion {
@@ -35,65 +54,105 @@
   background: #2563eb;
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
-  transition: background 0.2s;
+  gap: 8px;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+  height: 42px; /* Alineación vertical */
 }
 
 .boton-nuevo:hover {
   background: #1d4ed8;
+  transform: translateY(-1px);
 }
 
+.filtro-select {
+  padding: 0 16px;
+  height: 42px; /* Misma altura que el botón */
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #475569;
+  background-color: white;
+  cursor: pointer;
+  outline: none;
+  min-width: 180px;
+  transition: all 0.2s;
+}
+
+.filtro-select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.filtro-select:hover {
+  border-color: #cbd5e1;
+}
+
+/* Tabla de Reservas (Matching UsuarioComponent) */
 .tabla-wrapper {
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
   overflow: hidden;
+  border: 1px solid #e5e7eb;
 }
 
 .tabla-reservas {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
 }
 
 .tabla-reservas thead {
-  background: #f9fafb;
-  border-bottom: 1px solid #f0f0f0;
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .tabla-reservas th {
   padding: 12px 16px;
   text-align: left;
-  font-weight: 600;
-  color: #374151;
   font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
+  border: none;
+}
+
+.tabla-reservas th:first-child {
+  width: 50px;
+  text-align: center;
 }
 
 .tabla-reservas tbody tr {
   border-bottom: 1px solid #f0f0f0;
-  transition: background 0.2s;
-}
-
-.tabla-reservas tbody tr:hover {
-  background: #f9fafb;
+  transition: background 0.1s;
 }
 
 .tabla-reservas tbody tr:last-child {
   border-bottom: none;
 }
 
+.tabla-reservas tbody tr:hover {
+  background: #fafafa;
+}
+
 .tabla-reservas td {
   padding: 12px 16px;
+  font-size: 13px;
   color: #4b5563;
+  border: none;
+}
+
+.tabla-reservas td:first-child {
+  text-align: center;
+  font-weight: 500;
+  color: #9ca3af;
 }
 
 .centrado {
