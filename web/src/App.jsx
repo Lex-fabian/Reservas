@@ -9,7 +9,8 @@ function PrivateRoute({ children }) {
 }
 
 function PublicRoute({ children }) {
-  return !authService.isLoggedIn() ? children : <Navigate to="/inicio" />;
+  const isAuthorized = authService.isLoggedIn() && authService.isAdminOrSuper();
+  return isAuthorized ? <Navigate to="/inicio" /> : children;
 }
 
 function App() {
@@ -19,7 +20,7 @@ function App() {
         <Route
           path="/"
           element={
-            authService.isLoggedIn() ? (
+            authService.isLoggedIn() && authService.isAdminOrSuper() ? (
               <Navigate to="/inicio" />
             ) : (
               <Navigate to="/login" />

@@ -48,7 +48,7 @@ const Reserva = sequelize.define('Reserva', {
     allowNull: false
   },
   foto_comprobante: {
-    type: DataTypes.STRING(255),
+    type: DataTypes.TEXT,
     allowNull: true
   },
   estado: {

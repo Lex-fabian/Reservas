@@ -4,9 +4,8 @@ const { Op } = require('sequelize');
 const reservaController = {
   async crear(req, res) {
     try {
-      const { conjuntoId, areaId, fecha_reserva, hora_inicio, hora_fin, personas, observaciones } = req.body;
+      const { conjuntoId, areaId, fecha_reserva, hora_inicio, hora_fin, personas, observaciones, foto_comprobante } = req.body;
       const usuarioId = req.usuario.id;
-      const foto_comprobante = req.file ? `/uploads/comprobantes/${req.file.filename}` : null;
 
       // Validación de campos
       if (!conjuntoId || !areaId || !fecha_reserva || !hora_inicio || !hora_fin || !personas) {
@@ -18,6 +17,11 @@ const reservaController = {
         return res.status(400).json({ error: 'El comprobante de pago es obligatorio para realizar la reserva' });
       }
 
+      // Validar que foto_comprobante sea una cadena base64 si se proporciona
+      if (foto_comprobante && typeof foto_comprobante !== 'string') {
+        return res.status(400).json({ error: 'El formato del comprobante no es válido' });
+      }
+
       const reserva = await Reserva.create({
         usuarioId,
         conjuntoId,
@@ -27,7 +31,7 @@ const reservaController = {
         hora_fin,
         personas,
         observaciones,
-        foto_comprobante, // Guardar ruta
+        foto_comprobante, // Guardar base64
         estado: 'pendiente'
       });
 

@@ -222,77 +222,97 @@ export default function ModalReserva({ isOpen, onClose, onSubmit, reserva = null
 
           {modo === 'editar' && (
             <>
-              <div className="form-row">
-                <div className="form-grupo">
-                  <label htmlFor="fecha_reserva">Fecha</label>
-                  <input
-                    type="date"
-                    id="fecha_reserva"
-                    name="fecha_reserva"
-                    value={formData.fecha_reserva}
-                    disabled
-                  />
-                </div>
-
-                <div className="form-grupo">
-                  <label htmlFor="personas">Personas</label>
-                  <input
-                    type="number"
-                    id="personas"
-                    name="personas"
-                    value={formData.personas}
-                    disabled
-                  />
+              {/* Información del Usuario */}
+              <div className="info-section">
+                <h3 className="section-title">👤 Información del Cliente</h3>
+                <div className="info-grid">
+                  <div className="info-item">
+                    <span className="info-label">Nombre:</span>
+                    <span className="info-value">{reserva.Usuario?.nombre} {reserva.Usuario?.apellido}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Email:</span>
+                    <span className="info-value">{reserva.Usuario?.email || 'N/A'}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Teléfono:</span>
+                    <span className="info-value">{reserva.Usuario?.telefono || 'N/A'}</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="form-row">
-                <div className="form-grupo">
-                  <label htmlFor="hora_inicio">Hora Inicio</label>
-                  <input
-                    type="time"
-                    id="hora_inicio"
-                    name="hora_inicio"
-                    value={formData.hora_inicio}
-                    disabled
-                  />
-                </div>
-
-                <div className="form-grupo">
-                  <label htmlFor="hora_fin">Hora Fin</label>
-                  <input
-                    type="time"
-                    id="hora_fin"
-                    name="hora_fin"
-                    value={formData.hora_fin}
-                    disabled
-                  />
+              {/* Información de la Reserva */}
+              <div className="info-section">
+                <h3 className="section-title">📅 Detalles de la Reserva</h3>
+                <div className="info-grid">
+                  <div className="info-item">
+                    <span className="info-label">Área:</span>
+                    <span className="info-value">{reserva.Area?.nombre_area || 'N/A'}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Fecha:</span>
+                    <span className="info-value">{new Date(reserva.fecha_reserva).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Hora Inicio:</span>
+                    <span className="info-value">{reserva.hora_inicio}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Hora Fin:</span>
+                    <span className="info-value">{reserva.hora_fin}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Personas:</span>
+                    <span className="info-value">{reserva.personas} personas</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Estado:</span>
+                    <span className={`estado-badge estado-${reserva.estado}`}>{reserva.estado?.toUpperCase()}</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="form-grupo">
-                <label htmlFor="observaciones">Observaciones</label>
-                <textarea
-                  id="observaciones"
-                  name="observaciones"
-                  rows="3"
-                  value={formData.observaciones}
-                  disabled
-                />
-              </div>
+              {/* Observaciones */}
+              {reserva.observaciones && (
+                <div className="info-section">
+                  <h3 className="section-title">📝 Observaciones</h3>
+                  <div className="observaciones-box">
+                    {reserva.observaciones}
+                  </div>
+                </div>
+              )}
 
+              {/* Comprobante de Pago */}
               {reserva.foto_comprobante && (
-                <div className="form-grupo">
-                  <label>Comprobante de Pago</label>
-                  <div className="comprobante-container">
+                <div className="info-section">
+                  <h3 className="section-title">💳 Comprobante de Pago</h3>
+                  <div className="comprobante-wrapper">
                     <img 
-                      src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://192.168.1.108:10000'}${reserva.foto_comprobante}`} 
+                      src={reserva.foto_comprobante.includes('data:') ? reserva.foto_comprobante : `data:image/jpeg;base64,${reserva.foto_comprobante}`}
                       alt="Comprobante de Pago" 
-                      className="comprobante-img"
-                      style={{ maxWidth: '100%', maxHeight: '300px', objectFit: 'contain', borderRadius: '4px', border: '1px solid #ddd' }}
-                      onClick={() => window.open(`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://192.168.1.108:10000'}${reserva.foto_comprobante}`, '_blank')}
+                      className="comprobante-preview"
+                      onClick={() => {
+                        const imgSrc = reserva.foto_comprobante.includes('data:') ? reserva.foto_comprobante : `data:image/jpeg;base64,${reserva.foto_comprobante}`;
+                        window.open(imgSrc, '_blank');
+                      }}
+                      onError={(e) => {
+                        console.error('Error cargando imagen base64');
+                        e.target.style.display = 'none';
+                        const errorMsg = document.createElement('div');
+                        errorMsg.className = 'error-message';
+                        errorMsg.textContent = '⚠️ Error al cargar la imagen del comprobante';
+                        e.target.parentNode.appendChild(errorMsg);
+                      }}
                     />
-                    <small style={{ display: 'block', marginTop: '5px', color: '#666' }}>Click en la imagen para ver en tamaño completo</small>
+                    <p className="comprobante-hint">🔍 Click en la imagen para ver en tamaño completo</p>
+                  </div>
+                </div>
+              )}
+
+              {!reserva.foto_comprobante && reserva.estado === 'pendiente' && (
+                <div className="info-section">
+                  <div className="no-comprobante">
+                    <p>⚠️ Esta reserva no tiene comprobante de pago adjunto</p>
                   </div>
                 </div>
               )}

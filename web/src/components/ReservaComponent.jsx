@@ -258,7 +258,17 @@ export default function ReservaComponent() {
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
-                        {reserva.estado === 'pendiente' ? (
+                        {/* Botón de ver siempre visible */}
+                        <button
+                          className="boton-editar"
+                          onClick={() => abrirModalEditar(reserva)}
+                          title="Ver detalles y comprobante"
+                        >
+                          <FontAwesomeIcon icon={faEye} />
+                        </button>
+
+                        {/* Botones adicionales según estado */}
+                        {reserva.estado === 'pendiente' && (
                           <>
                             <button
                               className="boton-confirmar"
@@ -275,25 +285,16 @@ export default function ReservaComponent() {
                               <FontAwesomeIcon icon={faTimes} />
                             </button>
                           </>
-                        ) : (
-                          <>
-                            <button
-                              className="boton-editar"
-                              onClick={() => abrirModalEditar(reserva)}
-                              title="Ver reserva"
-                            >
-                              <FontAwesomeIcon icon={faEye} />
-                            </button>
-                            {reserva.estado !== 'cancelada' && (
-                              <button
-                                className="boton-eliminar"
-                                onClick={() => handleEliminar(reserva)}
-                                title="Cancelar reserva"
-                              >
-                                <FontAwesomeIcon icon={faTrash} />
-                              </button>
-                            )}
-                          </>
+                        )}
+
+                        {reserva.estado !== 'cancelada' && reserva.estado !== 'pendiente' && (
+                          <button
+                            className="boton-eliminar"
+                            onClick={() => handleEliminar(reserva)}
+                            title="Cancelar reserva"
+                          >
+                            <FontAwesomeIcon icon={faTrash} />
+                          </button>
                         )}
                       </div>
                     </td>
