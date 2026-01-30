@@ -19,15 +19,16 @@ app.set('trust proxy', 1);
 const helmet = require('helmet');
 const { apiLimiter } = require('./middleware/security');
 
-app.use(helmet());
-app.use(apiLimiter);
-
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:10000', 'https://reservas-725o.onrender.com', 'https://reservas-rust.vercel.app'],
+  origin: true, // Permite cualquier origen dinámicamente
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'Access-Control-Allow-Request-Method']
 }));
+app.options('*', cors()); // Habilitar pre-flight para todas las rutas
+
+app.use(helmet());
+app.use(apiLimiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -51,6 +52,11 @@ app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/reservas', reservaRoutes);
 app.use('/api/conjuntos', conjuntoRoutes);
 app.use('/api/areas', areaRoutes);
+app.use('/api/configuracion', require('./routes/configuracion.routes'));
+
+// Servir archivos estáticos (uploads)
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // Manejo de errores
 app.use((err, req, res, next) => {

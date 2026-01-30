@@ -1,9 +1,8 @@
 const rateLimit = require('express-rate-limit');
 
-// Limiter general para toda la API
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // Limita a 100 peticiones por IP por ventana
+  windowMs: 15 * 60 * 1000, 
+  max: 1000, 
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -11,10 +10,9 @@ const apiLimiter = rateLimit({
   }
 });
 
-// Limiter estricto para autenticación (login/register)
 const authLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hora
-  max: 10, // Limita a 10 intentos de login/registro por IP por hora
+  windowMs: 60 * 60 * 1000, 
+  max: 10, 
   standardHeaders: true,
   legacyHeaders: false,
   message: {

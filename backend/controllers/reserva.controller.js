@@ -6,9 +6,16 @@ const reservaController = {
     try {
       const { conjuntoId, areaId, fecha_reserva, hora_inicio, hora_fin, personas, observaciones } = req.body;
       const usuarioId = req.usuario.id;
+      const foto_comprobante = req.file ? `/uploads/comprobantes/${req.file.filename}` : null;
 
+      // Validación de campos
       if (!conjuntoId || !areaId || !fecha_reserva || !hora_inicio || !hora_fin || !personas) {
         return res.status(400).json({ error: 'Todos los campos son requeridos' });
+      }
+
+      // Validación de comprobante para 'usuario'
+      if (req.usuario.tipo_usuario === 'usuario' && !foto_comprobante) {
+        return res.status(400).json({ error: 'El comprobante de pago es obligatorio para realizar la reserva' });
       }
 
       const reserva = await Reserva.create({
@@ -20,6 +27,7 @@ const reservaController = {
         hora_fin,
         personas,
         observaciones,
+        foto_comprobante, // Guardar ruta
         estado: 'pendiente'
       });
 

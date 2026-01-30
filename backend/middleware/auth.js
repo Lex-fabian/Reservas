@@ -48,7 +48,6 @@ const esAdminOSuper = async (req, res, next) => {
     }
 
     if (tipoUsuario === 'admin') {
-      // Obtener los conjuntos asignados para scope
       const usuario = await Usuario.findByPk(req.usuario.id, {
         include: [{
           model: Conjunto,
@@ -62,7 +61,6 @@ const esAdminOSuper = async (req, res, next) => {
       }
 
       req.esSuperAdmin = false;
-      // Array de IDs de conjuntos permitidos
       req.scopeConjuntos = usuario.conjuntos.map(c => c.id);
       
       return next();

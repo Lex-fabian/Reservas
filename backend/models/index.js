@@ -2,8 +2,8 @@ const Usuario = require('./Usuario');
 const Conjunto = require('./Conjunto');
 const Area = require('./Area');
 const Reserva = require('./Reserva');
+const Configuracion = require('./Configuracion');
 
-// Relación many-to-many entre Usuario y Conjunto
 Usuario.belongsToMany(Conjunto, { 
   through: 'usuario_conjunto', 
   foreignKey: 'usuarioId',
@@ -33,5 +33,6 @@ module.exports = {
   Usuario,
   Conjunto,
   Area,
-  Reserva
+  Reserva,
+  Configuracion
 };
