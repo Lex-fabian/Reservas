@@ -50,10 +50,12 @@ app.use(cors({
 // Habilitar pre-flight explícitamente y manejar OPTIONS
 app.options('*', cors());
 
+
 app.use(helmet());
 app.use(apiLimiter);
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Aumentar límite de payload para imágenes base64 (50MB)
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Rutas
 app.get('/', (req, res) => {
