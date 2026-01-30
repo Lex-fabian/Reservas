@@ -19,13 +19,36 @@ app.set('trust proxy', 1);
 const helmet = require('helmet');
 const { apiLimiter } = require('./middleware/security');
 
+// Configuración CORS robusta
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'http://192.168.1.108:5173',
+  'http://192.168.1.108:8081', // React Native Metro Bundler default
+  'http://192.168.1.108:3000'
+];
+
 app.use(cors({
-  origin: true, // Permite cualquier origen dinámicamente
+  origin: function (origin, callback) {
+    // Permitir solicitudes sin origen (como apps móviles o curl)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || origin.startsWith('http://localhost') || origin.startsWith('http://192.168.')) {
+      callback(null, true);
+    } else {
+      console.log('Origen bloqueado por CORS:', origin);
+      callback(new Error('No permitido por CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'Access-Control-Allow-Request-Method']
 }));
-app.options('*', cors()); // Habilitar pre-flight para todas las rutas
+
+// Habilitar pre-flight explícitamente y manejar OPTIONS
+app.options('*', cors());
 
 app.use(helmet());
 app.use(apiLimiter);
