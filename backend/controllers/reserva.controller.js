@@ -68,6 +68,7 @@ const reservaController = {
 
       const reservas = await Reserva.findAll({
         where: whereClause,
+        attributes: ['id', 'usuarioId', 'conjuntoId', 'areaId', 'fecha_reserva', 'hora_inicio', 'hora_fin', 'personas', 'foto_comprobante', 'estado', 'observaciones', 'cancelado_por', 'motivo_cancelacion', 'createdAt', 'updatedAt'],
         include: [
           {
             model: Usuario,
