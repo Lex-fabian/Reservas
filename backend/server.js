@@ -77,9 +77,13 @@ app.use('/api/conjuntos', conjuntoRoutes);
 app.use('/api/areas', areaRoutes);
 app.use('/api/configuracion', require('./routes/configuracion.routes'));
 
-// Servir archivos estáticos (uploads)
+// Servir archivos estáticos (uploads) con headers CORS apropiados
 const path = require('path');
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+app.use('/uploads', (req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  next();
+}, express.static(path.join(__dirname, 'public/uploads')));
 
 // Manejo de errores
 app.use((err, req, res, next) => {
