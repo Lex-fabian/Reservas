@@ -8,6 +8,7 @@ import ReservaComponent from '../components/ReservaComponent';
 import UsuarioComponent from '../components/UsuarioComponent';
 import ConjuntoComponent from '../components/ConjuntoComponent';
 import AreaComponent from '../components/AreaComponent';
+import SistemaComponent from '../components/SistemaComponent';
 import ModalConfirmacion from '../components/ModalConfirmacion';
 import '../style/Inicio.css';
 
@@ -66,6 +67,16 @@ export default function Inicio() {
             >
               <FontAwesomeIcon icon={faBullseye} /> Áreas
             </button>
+            
+            {/* Botón Sistema solo para SuperAdmin */}
+            {authService.isAdminOrSuper() && (
+              <button 
+                className={`boton-nav ${vistaActual === 'sistema' ? 'activo' : ''}`}
+                onClick={() => setVistaActual('sistema')}
+              >
+                <FontAwesomeIcon icon={faCog} /> Sistema
+              </button>
+            )}
           </div>
           <div 
             className="circulo-perfil"
@@ -104,8 +115,10 @@ export default function Inicio() {
           <UsuarioComponent />
         ) : vistaActual === 'conjuntos' ? (
           <ConjuntoComponent />
-        ) : (
+        ) : vistaActual === 'areas' ? (
           <AreaComponent />
+        ) : (
+          <SistemaComponent />
         )}
       </div>
 

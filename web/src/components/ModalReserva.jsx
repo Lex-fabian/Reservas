@@ -280,6 +280,22 @@ export default function ModalReserva({ isOpen, onClose, onSubmit, reserva = null
                   disabled
                 />
               </div>
+
+              {reserva.foto_comprobante && (
+                <div className="form-grupo">
+                  <label>Comprobante de Pago</label>
+                  <div className="comprobante-container">
+                    <img 
+                      src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://192.168.1.108:10000'}${reserva.foto_comprobante}`} 
+                      alt="Comprobante de Pago" 
+                      className="comprobante-img"
+                      style={{ maxWidth: '100%', maxHeight: '300px', objectFit: 'contain', borderRadius: '4px', border: '1px solid #ddd' }}
+                      onClick={() => window.open(`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://192.168.1.108:10000'}${reserva.foto_comprobante}`, '_blank')}
+                    />
+                    <small style={{ display: 'block', marginTop: '5px', color: '#666' }}>Click en la imagen para ver en tamaño completo</small>
+                  </div>
+                </div>
+              )}
             </>
           )}
 
