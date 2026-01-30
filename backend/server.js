@@ -27,7 +27,8 @@ const allowedOrigins = [
   'http://127.0.0.1:3000',
   'http://192.168.1.108:5173',
   'http://192.168.1.108:8081', // React Native Metro Bundler default
-  'http://192.168.1.108:3000'
+  'http://192.168.1.108:3000',
+  'https://reservas-rust.vercel.app'
 ];
 
 app.use(cors({
