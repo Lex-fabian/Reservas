@@ -214,15 +214,9 @@ const usuarioController = {
       }
 
       // Enviar correo si se cambió la contraseña
-      let correoEnviado = false;
       if (contraseñaCambiada) {
         try {
-          correoEnviado = await enviarCambioContraseña(usuario.email, usuario.usuario, contraseña);
-          if (correoEnviado) {
-            console.log(`✅ Correo de cambio de contraseña enviado exitosamente a ${usuario.email}`);
-          } else {
-            console.warn(`⚠️ No se pudo enviar correo de cambio de contraseña a ${usuario.email} (credenciales no configuradas)`);
-          }
+          await enviarCambioContraseña(usuario.email, usuario.usuario, contraseña);
         } catch (emailError) {
           console.error('❌ Error al enviar correo de cambio de contraseña:', emailError.message);
           // No fallar la actualización si el correo falla
