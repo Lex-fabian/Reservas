@@ -299,6 +299,45 @@ const usuarioController = {
       console.error('Error al cambiar estado:', error);
       res.status(500).json({ error: 'Error al cambiar estado del usuario' });
     }
+  },
+
+  async cambiarContraseñaPropia(req, res) {
+    try {
+      const usuarioId = req.usuario.id;
+      const { contraseñaActual, contraseñaNueva } = req.body;
+
+      if (!contraseñaActual || !contraseñaNueva) {
+        return res.status(400).json({ error: 'Se requieren ambas contraseñas' });
+      }
+
+      const usuario = await Usuario.findByPk(usuarioId);
+      if (!usuario) {
+        return res.status(404).json({ error: 'Usuario no encontrado' });
+      }
+
+      // Verificar contraseña actual
+      const contraseñaValida = await usuario.validarContraseña(contraseñaActual);
+      if (!contraseñaValida) {
+        return res.status(401).json({ error: 'Contraseña actual incorrecta' });
+      }
+
+      // Actualizar contraseña
+      usuario.contraseña = contraseñaNueva;
+      await usuario.save();
+
+      // Enviar email de notificación
+      try {
+        await enviarCambioContraseña(usuario.email, usuario.usuario, contraseñaNueva);
+      } catch (emailError) {
+        console.error('Error al enviar email:', emailError);
+        // No fallar la operación si el email falla
+      }
+
+      res.json({ mensaje: 'Contraseña actualizada exitosamente' });
+    } catch (error) {
+      console.error('Error al cambiar contraseña:', error);
+      res.status(500).json({ error: 'Error al cambiar la contraseña' });
+    }
   }
 };
 

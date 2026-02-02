@@ -7,15 +7,17 @@ let transporter = null;
 if (process.env.BREVO_API_KEY) {
   transporter = nodemailer.createTransport({
     host: 'smtp-relay.sendinblue.com',
-    port: 587,
+    port: 2525, // Puerto alternativo para hosting providers como Render
     secure: false,
     auth: {
       user: process.env.BREVO_USER,
       pass: process.env.BREVO_API_KEY
     },
     tls: {
-      rejectUnauthorized: false // Para evitar problemas de certificado en desarrollo
-    }
+      rejectUnauthorized: false
+    },
+    connectionTimeout: 10000, // 10 segundos
+    greetingTimeout: 10000
   });
   
   console.log('📧 Transporter SMTP configurado para Brevo');

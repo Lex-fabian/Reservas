@@ -6,12 +6,15 @@ const { verificarToken, esSuperAdmin, esAdminOSuper } = require('../middleware/a
 // Todas las rutas requieren autenticación básica
 router.use(verificarToken);
 
+// Cambiar contraseña propia (cualquier usuario autenticado)
+router.post('/cambiar-password', usuarioController.cambiarContraseñaPropia);
+
 // Rutas CRUD con RBAC
 router.post('/', esAdminOSuper, usuarioController.crear);
 router.get('/', esAdminOSuper, usuarioController.obtenerTodos);
 router.get('/:id', esAdminOSuper, usuarioController.obtenerPorId);
 router.put('/:id', esAdminOSuper, usuarioController.actualizar);
-router.patch('/:id/estado', esAdminOSuper, usuarioController.cambiarEstado); // Si existe en controller
+router.patch('/:id/estado', esAdminOSuper, usuarioController.cambiarEstado);
 
 // Eliminar - SOLO SUPERADMIN
 router.delete('/:id', esSuperAdmin, usuarioController.eliminar);
