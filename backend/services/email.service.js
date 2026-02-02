@@ -1,10 +1,71 @@
-const { Resend } = require('resend');
+const nodemailer = require('nodemailer');
 require('dotenv').config();
 
-// Configurar Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Configurar transporter (soporta múltiples proveedores)
+let transporter = null;
+
+if (process.env.BREVO_API_KEY) {
+  // Brevo (SendinBlue) - No requiere dominio
+  transporter = nodemailer.createTransport({
+    host: 'smtp-relay.brevo.com',
+    port: 587,
+    auth: {
+      user: process.env.BREVO_USER, // Tu email de Brevo
+      pass: process.env.BREVO_API_KEY // Tu API key
+    }
+  });
+} else if (process.env.RESEND_API_KEY) {
+  // Resend (requiere dominio para envío directo)
+  const { Resend } = require('resend');
+  const resend = new Resend(process.env.RESEND_API_KEY);
+}
 
 const enviarCredenciales = async (email, usuario, contraseña) => {
+  try {
+    if (!transporter && !process.env.RESEND_API_KEY) {
+      console.warn('⚠️ No hay servicio de email configurado');
+      console.log(`[SIMULACIÓN] Email: ${email} | Usuario: ${usuario} | Pass: ${contraseña}`);
+      return false;
+    }
+
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+        <h2 style="color: #4a90e2; text-align: center;">¡Bienvenido a ReservasApp!</h2>
+        <p>Hola,</p>
+        <p>Se ha creado una nueva cuenta de usuario. A continuación encontrarás las credenciales de acceso:</p>
+        
+        <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <p style="margin: 5px 0;"><strong>Usuario:</strong> ${usuario}</p>
+          <p style="margin: 5px 0;"><strong>Contraseña:</strong> ${contraseña}</p>
+        </div>
+
+        <p>Por razones de seguridad, te recomendamos cambiar tu contraseña una vez que ingreses al sistema.</p>
+        
+        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+        <p style="font-size: 12px; color: #888; text-align: center;">Este es un mensaje automático, por favor no respondas a este correo.</p>
+      </div>
+    `;
+
+    // Usar Brevo/Nodemailer si está configurado
+    if (transporter) {
+      await transporter.sendMail({
+        from: process.env.EMAIL_FROM || '"ReservasApp" <noreply@reservasapp.com>',
+        to: email,
+        subject: 'Bienvenido a ReservasApp - Tus Credenciales',
+        html: htmlContent
+      });
+      console.log('✅ Correo enviado exitosamente a:', email);
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    console.error('Error al enviar correo:', error);
+    return false;
+  }
+};
+
+const enviarCambioContraseña = async (email, usuario, nuevaContraseña) => {
   try {
     // Si no hay API key configurada, solo loguear (para dev)
     if (!process.env.RESEND_API_KEY) {

@@ -12,28 +12,24 @@ const usuarioRoutes = require('./routes/usuario.routes');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Trust proxy - IMPORTANTE para Render y otros servicios detrás de proxies
 app.set('trust proxy', 1);
 
-// Seguridad
 const helmet = require('helmet');
 const { apiLimiter } = require('./middleware/security');
 
-// Configuración CORS robusta
 const allowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
   'http://localhost:3000',
   'http://127.0.0.1:3000',
   'http://192.168.1.108:5173',
-  'http://192.168.1.108:8081', // React Native Metro Bundler default
+  'http://192.168.1.108:8081',
   'http://192.168.1.108:3000',
   'https://reservas-rust.vercel.app'
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Permitir solicitudes sin origen (como apps móviles o curl)
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.indexOf(origin) !== -1 || origin.startsWith('http://localhost') || origin.startsWith('http://192.168.')) {
@@ -48,17 +44,14 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'Access-Control-Allow-Request-Method']
 }));
 
-// Habilitar pre-flight explícitamente y manejar OPTIONS
 app.options('*', cors());
 
 
 app.use(helmet());
 app.use(apiLimiter);
-// Aumentar límite de payload para imágenes base64 (50MB)
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Rutas
 app.get('/', (req, res) => {
   res.json({ 
     message: ' API ReservasApp activa',
@@ -80,7 +73,6 @@ app.use('/api/conjuntos', conjuntoRoutes);
 app.use('/api/areas', areaRoutes);
 app.use('/api/configuracion', require('./routes/configuracion.routes'));
 
-// Servir archivos estáticos (uploads) con headers CORS apropiados
 const path = require('path');
 app.use('/uploads', (req, res, next) => {
   res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
@@ -88,7 +80,6 @@ app.use('/uploads', (req, res, next) => {
   next();
 }, express.static(path.join(__dirname, 'public/uploads')));
 
-// Manejo de errores
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ 
@@ -97,7 +88,6 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Iniciar servidor
 const startServer = async () => {
   await connectDB();
   app.listen(PORT, () => {
