@@ -105,3 +105,12 @@
 .boton-modal-eliminar:hover {
   background: #dc2626;
 }
+
+.boton-modal-peligro {
+  background: #dc2626;
+  color: white;
+}
+
+.boton-modal-peligro:hover {
+  background: #b91c1c;
+}

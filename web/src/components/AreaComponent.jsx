@@ -5,6 +5,7 @@ import { faEdit, faTrash, faPlus } from '@fortawesome/free-solid-svg-icons';
 import ModalArea from './ModalArea';
 import ModalConfirmacion from './ModalConfirmacion';
 import Notificacion from './Notificacion';
+import Paginacion from './Paginacion';
 import './AreaComponent.css';
 
 export default function AreaComponent() {
@@ -220,37 +221,11 @@ export default function AreaComponent() {
       </div>
       </div>
 
-      {totalPaginas > 1 && (
-        <div className="paginacion">
-          {Array.from({ length: totalPaginas }).map((_, index) => {
-            const numeroPagina = index + 1;
-            const mostrarPagina = 
-              numeroPagina === 1 ||
-              numeroPagina === totalPaginas ||
-              (numeroPagina >= paginaActual - 2 && numeroPagina <= paginaActual + 2);
-            
-            if (!mostrarPagina && numeroPagina === paginaActual - 3) {
-              return <span key={numeroPagina} className="puntos-suspensivos">...</span>;
-            }
-            if (!mostrarPagina && numeroPagina === paginaActual + 3) {
-              return <span key={numeroPagina} className="puntos-suspensivos">...</span>;
-            }
-            if (!mostrarPagina) {
-              return null;
-            }
-            
-            return (
-              <button
-                key={numeroPagina}
-                className={`boton-paginacion ${paginaActual === numeroPagina ? 'activo' : ''}`}
-                onClick={() => setPaginaActual(numeroPagina)}
-              >
-                {numeroPagina}
-              </button>
-            );
-          })}
-        </div>
-      )}
+      <Paginacion
+        paginaActual={paginaActual}
+        totalPaginas={totalPaginas}
+        onChange={setPaginaActual}
+      />
 
       <ModalArea
         isOpen={modalAbierto}

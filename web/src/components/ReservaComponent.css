@@ -72,6 +72,23 @@
   transform: translateY(-1px);
 }
 
+.boton-limpiar {
+  background: #6b7280;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  height: 42px;
+}
+
+.boton-limpiar:hover {
+  background: #4b5563;
+}
+
 .filtro-select {
   padding: 0 16px;
   height: 42px; /* Misma altura que el botón */
@@ -92,6 +109,29 @@
 }
 
 .filtro-select:hover {
+  border-color: #cbd5e1;
+}
+
+.filtro-fecha {
+  padding: 0 16px;
+  height: 42px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #475569;
+  background-color: white;
+  cursor: pointer;
+  outline: none;
+  min-width: 160px;
+  transition: all 0.2s;
+}
+
+.filtro-fecha:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.filtro-fecha:hover {
   border-color: #cbd5e1;
 }
 

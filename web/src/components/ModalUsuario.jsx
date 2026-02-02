@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import './ModalUsuario.css';
 
-export default function ModalUsuario({ isOpen, onClose, onSubmit, usuario = null, modo = 'crear', conjuntos = [] }) {
+export default function ModalUsuario({ isOpen, onClose, onSubmit, usuario = null, modo = 'crear', conjuntos = [], currentUser = null }) {
   const [formData, setFormData] = useState({
     nombre: '',
     apellido: '',
@@ -215,8 +215,12 @@ export default function ModalUsuario({ isOpen, onClose, onSubmit, usuario = null
                 required
               >
                 <option value="usuario">Usuario</option>
-                <option value="admin">Admin</option>
-                <option value="superadmin">Super Admin</option>
+                {currentUser?.tipo_usuario === 'superadmin' && (
+                  <>
+                    <option value="admin">Admin</option>
+                    <option value="superadmin">Super Admin</option>
+                  </>
+                )}
               </select>
             </div>
 

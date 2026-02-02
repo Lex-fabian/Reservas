@@ -5,6 +5,7 @@ import { faEdit, faTrash, faPlus, faEye, faCheck, faTimes } from '@fortawesome/f
 import ModalReserva from './ModalReserva';
 import ModalConfirmacion from './ModalConfirmacion';
 import Notificacion from './Notificacion';
+import Paginacion from './Paginacion';
 import './ReservaComponent.css';
 
 export default function ReservaComponent() {
@@ -25,6 +26,8 @@ export default function ReservaComponent() {
   const [areas, setAreas] = useState([]);
   const [filtroConjunto, setFiltroConjunto] = useState('');
   const [filtroArea, setFiltroArea] = useState('');
+  const [filtroFechaInicio, setFiltroFechaInicio] = useState('');
+  const [filtroFechaFin, setFiltroFechaFin] = useState('');
 
   useEffect(() => {
     cargarDatos();
@@ -158,6 +161,14 @@ export default function ReservaComponent() {
     return classes[estado] || 'insignia-secundaria';
   };
 
+  const limpiarFiltros = () => {
+    setFiltroConjunto('');
+    setFiltroArea('');
+    setFiltroFechaInicio('');
+    setFiltroFechaFin('');
+    setPaginaActual(1);
+  };
+
   if (loading) {
     return (
       <div className="contenedor-reservas">
@@ -173,6 +184,16 @@ export default function ReservaComponent() {
     if (filtroArea && reserva.areaId !== parseInt(filtroArea)) {
       return false;
     }
+    
+    // Filtro por rango de fechas
+    const fechaReserva = reserva.fecha_reserva || reserva.fecha;
+    if (filtroFechaInicio && fechaReserva < filtroFechaInicio) {
+      return false;
+    }
+    if (filtroFechaFin && fechaReserva > filtroFechaFin) {
+      return false;
+    }
+    
     return true;
   });
 
@@ -216,6 +237,31 @@ export default function ReservaComponent() {
                 </option>
               ))}
             </select>
+          )}
+
+          <input
+            type="date"
+            className="filtro-fecha"
+            value={filtroFechaInicio}
+            onChange={(e) => setFiltroFechaInicio(e.target.value)}
+            placeholder="Fecha inicio"
+            title="Fecha inicio"
+          />
+
+          <input
+            type="date"
+            className="filtro-fecha"
+            value={filtroFechaFin}
+            onChange={(e) => setFiltroFechaFin(e.target.value)}
+            placeholder="Fecha fin"
+            title="Fecha fin"
+            min={filtroFechaInicio}
+          />
+
+          {(filtroConjunto || filtroArea || filtroFechaInicio || filtroFechaFin) && (
+            <button className="boton-limpiar" onClick={limpiarFiltros} title="Limpiar filtros">
+              Limpiar
+            </button>
           )}
 
           <button className="boton-nuevo" onClick={abrirModalCrear}>
@@ -319,37 +365,11 @@ export default function ReservaComponent() {
         </table>
       </div>
 
-      {totalPaginas > 1 && (
-        <div className="paginacion">
-          {Array.from({ length: totalPaginas }).map((_, index) => {
-            const numeroPagina = index + 1;
-            const mostrarPagina = 
-              numeroPagina === 1 ||
-              numeroPagina === totalPaginas ||
-              (numeroPagina >= paginaActual - 2 && numeroPagina <= paginaActual + 2);
-            
-            if (!mostrarPagina && numeroPagina === paginaActual - 3) {
-              return <span key={numeroPagina} className="puntos-suspensivos">...</span>;
-            }
-            if (!mostrarPagina && numeroPagina === paginaActual + 3) {
-              return <span key={numeroPagina} className="puntos-suspensivos">...</span>;
-            }
-            if (!mostrarPagina) {
-              return null;
-            }
-            
-            return (
-              <button
-                key={numeroPagina}
-                className={`boton-paginacion ${paginaActual === numeroPagina ? 'activo' : ''}`}
-                onClick={() => setPaginaActual(numeroPagina)}
-              >
-                {numeroPagina}
-              </button>
-            );
-          })}
-        </div>
-      )}
+      <Paginacion
+        paginaActual={paginaActual}
+        totalPaginas={totalPaginas}
+        onChange={setPaginaActual}
+      />
 
       <ModalReserva
         isOpen={modalAbierto}

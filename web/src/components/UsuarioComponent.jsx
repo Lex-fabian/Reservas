@@ -3,6 +3,7 @@ import { usuarioService, authService, conjuntoService } from '../services/api';
 import ModalUsuario from './ModalUsuario';
 import ModalConfirmacion from './ModalConfirmacion';
 import Notificacion from './Notificacion';
+import Paginacion from './Paginacion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash, faUserPlus } from '@fortawesome/free-solid-svg-icons';
 import './UsuarioComponent.css';
@@ -259,37 +260,11 @@ export default function UsuarioComponent() {
         </table>
       </div>
 
-      {totalPaginas > 1 && (
-        <div className="paginacion">
-          {Array.from({ length: totalPaginas }).map((_, index) => {
-            const numeroPagina = index + 1;
-            const mostrarPagina = 
-              numeroPagina === 1 ||
-              numeroPagina === totalPaginas ||
-              (numeroPagina >= paginaActual - 2 && numeroPagina <= paginaActual + 2);
-            
-            if (!mostrarPagina && numeroPagina === paginaActual - 3) {
-              return <span key={numeroPagina} className="puntos-suspensivos">...</span>;
-            }
-            if (!mostrarPagina && numeroPagina === paginaActual + 3) {
-              return <span key={numeroPagina} className="puntos-suspensivos">...</span>;
-            }
-            if (!mostrarPagina) {
-              return null;
-            }
-            
-            return (
-              <button
-                key={numeroPagina}
-                className={`boton-paginacion ${paginaActual === numeroPagina ? 'activo' : ''}`}
-                onClick={() => setPaginaActual(numeroPagina)}
-              >
-                {numeroPagina}
-              </button>
-            );
-          })}
-        </div>
-      )}
+      <Paginacion
+        paginaActual={paginaActual}
+        totalPaginas={totalPaginas}
+        onChange={setPaginaActual}
+      />
 
       <ModalUsuario
         isOpen={modalAbierto}
@@ -298,6 +273,7 @@ export default function UsuarioComponent() {
         usuario={usuarioEditando}
         onSubmit={handleSubmit}
         conjuntos={conjuntos}
+        currentUser={currentUser}
       />
 
       <ModalConfirmacion

@@ -5,6 +5,7 @@ import { faEdit, faTrash, faPlus } from '@fortawesome/free-solid-svg-icons';
 import ModalConjunto from './ModalConjunto';
 import ModalConfirmacion from './ModalConfirmacion';
 import Notificacion from './Notificacion';
+import Paginacion from './Paginacion';
 import './ConjuntoComponent.css';
 
 export default function ConjuntoComponent() {
@@ -121,9 +122,11 @@ export default function ConjuntoComponent() {
         <h2>Conjuntos Residenciales</h2>
         <div className="acciones-encabezado">
           <p className="subtitulo-seccion">Total: {conjuntos.length} conjuntos</p>
-          <button className="boton-nuevo" onClick={abrirModalCrear}>
-            <FontAwesomeIcon icon={faPlus} /> Nuevo Conjunto
-          </button>
+          {currentUser?.tipo_usuario === 'superadmin' && (
+            <button className="boton-nuevo" onClick={abrirModalCrear}>
+              <FontAwesomeIcon icon={faPlus} /> Nuevo Conjunto
+            </button>
+          )}
         </div>
       </div>
 
@@ -161,22 +164,24 @@ export default function ConjuntoComponent() {
                       </td>
                       <td>
                         <div style={{ display: 'flex', gap: '4px' }}>
-                          <button 
-                            className="boton-editar" 
-                            onClick={() => abrirModalEditar(conjunto)}
-                            title="Editar conjunto"
-                          >
-                            <FontAwesomeIcon icon={faEdit} />
-                          </button>
-                          
                           {currentUser?.tipo_usuario === 'superadmin' && (
-                            <button 
-                              className="boton-eliminar" 
-                              onClick={() => handleEliminar(conjunto)}
-                              title="Eliminar conjunto"
-                            >
-                              <FontAwesomeIcon icon={faTrash} />
-                            </button>
+                            <>
+                              <button 
+                                className="boton-editar" 
+                                onClick={() => abrirModalEditar(conjunto)}
+                                title="Editar conjunto"
+                              >
+                                <FontAwesomeIcon icon={faEdit} />
+                              </button>
+                              
+                              <button 
+                                className="boton-eliminar" 
+                                onClick={() => handleEliminar(conjunto)}
+                                title="Eliminar conjunto"
+                              >
+                                <FontAwesomeIcon icon={faTrash} />
+                              </button>
+                            </>
                           )}
                         </div>
                       </td>
@@ -204,37 +209,11 @@ export default function ConjuntoComponent() {
       </div>
       </div>
 
-      {totalPaginas > 1 && (
-        <div className="paginacion">
-          {Array.from({ length: totalPaginas }).map((_, index) => {
-            const numeroPagina = index + 1;
-            const mostrarPagina = 
-              numeroPagina === 1 ||
-              numeroPagina === totalPaginas ||
-              (numeroPagina >= paginaActual - 2 && numeroPagina <= paginaActual + 2);
-            
-            if (!mostrarPagina && numeroPagina === paginaActual - 3) {
-              return <span key={numeroPagina} className="puntos-suspensivos">...</span>;
-            }
-            if (!mostrarPagina && numeroPagina === paginaActual + 3) {
-              return <span key={numeroPagina} className="puntos-suspensivos">...</span>;
-            }
-            if (!mostrarPagina) {
-              return null;
-            }
-            
-            return (
-              <button
-                key={numeroPagina}
-                className={`boton-paginacion ${paginaActual === numeroPagina ? 'activo' : ''}`}
-                onClick={() => setPaginaActual(numeroPagina)}
-              >
-                {numeroPagina}
-              </button>
-            );
-          })}
-        </div>
-      )}
+      <Paginacion
+        paginaActual={paginaActual}
+        totalPaginas={totalPaginas}
+        onChange={setPaginaActual}
+      />
 
       <ModalConjunto
         isOpen={modalAbierto}

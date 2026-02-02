@@ -1,7 +1,17 @@
 import './ModalConfirmacion.css';
 
-export default function ModalConfirmacion({ isOpen, titulo, mensaje, onConfirmar, onCancelar }) {
+export default function ModalConfirmacion({ 
+  isOpen, 
+  titulo, 
+  mensaje, 
+  onConfirmar, 
+  onCancelar, 
+  textoConfirmar = 'Eliminar',
+  tipo = 'eliminar'
+}) {
   if (!isOpen) return null;
+
+  const claseBoton = tipo === 'peligro' ? 'boton-modal-peligro' : 'boton-modal-eliminar';
 
   return (
     <>
@@ -17,8 +27,8 @@ export default function ModalConfirmacion({ isOpen, titulo, mensaje, onConfirmar
           <button className="boton-modal-cancelar" onClick={onCancelar}>
             Cancelar
           </button>
-          <button className="boton-modal-eliminar" onClick={onConfirmar}>
-            Eliminar
+          <button className={claseBoton} onClick={onConfirmar}>
+            {textoConfirmar}
           </button>
         </div>
       </div>
