@@ -20,17 +20,19 @@ if (process.env.BREVO_API_KEY) {
     greetingTimeout: 10000
   });
   
-  console.log('📧 Transporter SMTP configurado para Brevo');
+  console.log(' Transporter SMTP configurado para Brevo');
 }
 
 const enviarCredenciales = async (email, usuario, contraseña) => {
   try {
     if (!transporter) {
-      console.warn('⚠️ No hay servicio de email configurado');
+      console.warn(' No hay servicio de email configurado');
       console.log(`[SIMULACIÓN] Email: ${email} | Usuario: ${usuario} | Pass: ${contraseña}`);
       return false;
     }
 
+    const appUrl = process.env.APP_URL || 'https://reservas-web-mu.vercel.app';
+    
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
         <h2 style="color: #4a90e2; text-align: center;">¡Bienvenido a ReservasApp!</h2>
@@ -42,7 +44,13 @@ const enviarCredenciales = async (email, usuario, contraseña) => {
           <p style="margin: 5px 0;"><strong>Contraseña:</strong> ${contraseña}</p>
         </div>
 
-        <p>Por razones de seguridad, te recomendamos cambiar tu contraseña una vez que ingreses al sistema.</p>
+        <p>Por razones de seguridad, <strong>te recomendamos cambiar tu contraseña</strong> una vez que ingreses al sistema.</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${appUrl}/login" style="display: inline-block; background: #4a90e2; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: 600;">Ir a Iniciar Sesión</a>
+        </div>
+        
+        <p style="font-size: 13px; color: #666; text-align: center;">Inicia sesión con tus credenciales. Luego haz clic en tu perfil (arriba derecha) → "Mi Perfil" para cambiar tu contraseña.</p>
         
         <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
         <p style="font-size: 12px; color: #888; text-align: center;">Este es un mensaje automático, por favor no respondas a este correo.</p>
@@ -56,11 +64,11 @@ const enviarCredenciales = async (email, usuario, contraseña) => {
       html: htmlContent
     });
     
-    console.log('✅ Correo de credenciales enviado exitosamente a:', email);
+    console.log(' Correo de credenciales enviado exitosamente a:', email);
     return true;
 
   } catch (error) {
-    console.error('❌ Error al enviar correo de credenciales:', error);
+    console.error(' Error al enviar correo de credenciales:', error);
     return false;
   }
 };
@@ -73,6 +81,8 @@ const enviarCambioContraseña = async (email, usuario, nuevaContraseña) => {
       return false;
     }
 
+    const appUrl = process.env.APP_URL || 'https://reservas-web-mu.vercel.app';
+    
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
         <h2 style="color: #4a90e2; text-align: center;">Cambio de Contraseña - ReservasApp</h2>
@@ -84,7 +94,13 @@ const enviarCambioContraseña = async (email, usuario, nuevaContraseña) => {
           <p style="margin: 5px 0;"><strong>Nueva Contraseña:</strong> ${nuevaContraseña}</p>
         </div>
 
-        <p>Por razones de seguridad, te recomendamos cambiar tu contraseña una vez que ingreses al sistema.</p>
+        <p>Por razones de seguridad, <strong>te recomendamos cambiar esta contraseña</strong> por una de tu preferencia.</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${appUrl}/login" style="display: inline-block; background: #4a90e2; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: 600;">Ir a Iniciar Sesión</a>
+        </div>
+        
+        <p style="font-size: 13px; color: #666; text-align: center;">Inicia sesión con tu nueva contraseña. Luego ve a tu perfil (arriba derecha) → "Mi Perfil" para cambiarla por una personalizada.</p>
         
         <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
         <p style="font-size: 12px; color: #888; text-align: center;">Si no solicitaste este cambio, contacta al administrador inmediatamente.</p>
@@ -98,11 +114,11 @@ const enviarCambioContraseña = async (email, usuario, nuevaContraseña) => {
       html: htmlContent
     });
     
-    console.log('✅ Correo de cambio de contraseña enviado exitosamente a:', email);
+    console.log(' Correo de cambio de contraseña enviado exitosamente a:', email);
     return true;
 
   } catch (error) {
-    console.error('❌ Error al enviar correo de cambio de contraseña:', error);
+    console.error(' Error al enviar correo de cambio de contraseña:', error);
     return false;
   }
 };
