@@ -112,6 +112,11 @@ export const usuarioService = {
     const response = await api.delete(`/usuarios/${id}`);
     return response.data;
   },
+
+  async cambiarContraseñaPropia(datos) {
+    const response = await api.post('/usuarios/cambiar-password', datos);
+    return response.data;
+  },
 };
 
 export const conjuntoService = {

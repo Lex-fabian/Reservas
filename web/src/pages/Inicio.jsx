@@ -9,6 +9,7 @@ import UsuarioComponent from '../components/UsuarioComponent';
 import ConjuntoComponent from '../components/ConjuntoComponent';
 import AreaComponent from '../components/AreaComponent';
 import SistemaComponent from '../components/SistemaComponent';
+import PerfilComponent from '../components/PerfilComponent';
 import ModalConfirmacion from '../components/ModalConfirmacion';
 import '../style/Inicio.css';
 
@@ -96,9 +97,12 @@ export default function Inicio() {
               <span>{usuario?.nombre}</span>
             </div>
             <div className="separador-modal"></div>
-            <div className="item-modal" onClick={() => setMostrarModalPerfil(false)}>
+            <div className="item-modal" onClick={() => {
+              setMostrarModalPerfil(false);
+              setVistaActual('perfil');
+            }}>
               <span className="icono-modal"><FontAwesomeIcon icon={faCog} /></span>
-              <span>Ajustes</span>
+              <span>Mi Perfil</span>
             </div>
             <div className="item-modal item-logout" onClick={handleLogout}>
               <span className="icono-modal"><FontAwesomeIcon icon={faRightFromBracket} /></span>
@@ -117,6 +121,8 @@ export default function Inicio() {
           <ConjuntoComponent />
         ) : vistaActual === 'areas' ? (
           <AreaComponent />
+        ) : vistaActual === 'perfil' ? (
+          <PerfilComponent />
         ) : (
           <SistemaComponent />
         )}
