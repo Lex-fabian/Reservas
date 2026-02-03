@@ -82,7 +82,6 @@ export default function UsuarioComponent() {
   const handleSubmit = async (formData) => {
     // Cerrar modal inmediatamente
     cerrarModal();
-    setNotificacionVisible(true);
     
     // Procesar en segundo plano
     try {
@@ -101,6 +100,9 @@ export default function UsuarioComponent() {
           conjuntos: formData.conjuntos || []
         });
         
+        // Mostrar notificación de éxito
+        setNotificacionVisible(true);
+        
         // Mostrar modal con la contraseña generada
         if (response.contraseñaTemporal) {
           setCredencialesGeneradas({
@@ -111,6 +113,7 @@ export default function UsuarioComponent() {
         }
       } else {
         await usuarioService.actualizar(usuarioEditando.id, formData);
+        setNotificacionVisible(true);
       }
       cargarUsuarios();
     } catch (error) {
