@@ -170,19 +170,30 @@ export default function ModalUsuario({ isOpen, onClose, onSubmit, usuario = null
             />
           </div>
 
-          <div className="form-grupo">
-            <label htmlFor="contraseña">
-              {modo === 'crear' ? 'Contraseña *' : 'Contraseña (dejar vacío para mantener)'}
-            </label>
-            <input
-              type="password"
-              id="contraseña"
-              name="contraseña"
-              value={formData.contraseña}
-              onChange={handleChange}
-              required={modo === 'crear'}
-            />
-          </div>
+          {/* Solo mostrar campo contraseña en modo EDITAR */}
+          {modo === 'editar' && (
+            <div className="form-grupo">
+              <label htmlFor="contraseña">
+                Contraseña (dejar vacío para mantener)
+              </label>
+              <input
+                type="password"
+                id="contraseña"
+                name="contraseña"
+                value={formData.contraseña}
+                onChange={handleChange}
+              />
+            </div>
+          )}
+
+          {/* Mensaje informativo en modo CREAR */}
+          {modo === 'crear' && (
+            <div className="form-grupo info-password">
+              <p className="info-text">
+                ℹ️ La contraseña se generará automáticamente y se mostrará después de crear el usuario.
+              </p>
+            </div>
+          )}
 
           <div className="form-grupo">
             <label>Conjuntos *</label>

@@ -42,6 +42,7 @@ export const authService = {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('usuario', JSON.stringify(response.data.usuario));
     }
+    // Retornar toda la respuesta incluyendo debe_cambiar_password
     return response.data;
   },
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/api';
+import ModalCambioPasswordObligatorio from '../components/ModalCambioPasswordObligatorio';
 import '../style/login.css';
 
 export default function Login() {
@@ -10,6 +11,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [mostrarPassword, setMostrarPassword] = useState(false);
+  const [modalCambioPasswordAbierto, setModalCambioPasswordAbierto] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,7 +25,14 @@ export default function Login() {
     setLoading(true);
     
     try {
-      await authService.login(usuario, contraseña);
+      const response = await authService.login(usuario, contraseña);
+      
+      // Verificar si debe cambiar contraseña
+      if (response.debe_cambiar_password) {
+        setModalCambioPasswordAbierto(true);
+        setLoading(false);
+        return;
+      }
       
       // Check role strictly before navigating
       if (authService.isAdminOrSuper()) {
@@ -37,6 +46,17 @@ export default function Login() {
       setError(error.response?.data?.mensaje || 'Error al iniciar sesión');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCambioPasswordExitoso = () => {
+    setModalCambioPasswordAbierto(false);
+    // Redirigir a inicio después de cambiar contraseña
+    if (authService.isAdminOrSuper()) {
+      navigate('/inicio');
+    } else {
+      authService.logout();
+      setError('Acceso denegado. Solo administradores pueden acceder.');
     }
   };
 
@@ -88,6 +108,12 @@ export default function Login() {
           </button>
         </form>
       </div>
+
+      <ModalCambioPasswordObligatorio
+        isOpen={modalCambioPasswordAbierto}
+        onClose={() => {}}
+        onCambioExitoso={handleCambioPasswordExitoso}
+      />
     </div>
   );
 }

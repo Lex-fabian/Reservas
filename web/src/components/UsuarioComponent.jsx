@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { usuarioService, authService, conjuntoService } from '../services/api';
 import ModalUsuario from './ModalUsuario';
+import ModalPasswordGenerada from './ModalPasswordGenerada';
 import ModalConfirmacion from './ModalConfirmacion';
 import Notificacion from './Notificacion';
 import Paginacion from './Paginacion';
@@ -21,6 +22,8 @@ export default function UsuarioComponent() {
   const [paginaActual, setPaginaActual] = useState(1);
   const usuariosPorPagina = 7;
   const [currentUser, setCurrentUser] = useState(null);
+  const [modalPasswordAbierto, setModalPasswordAbierto] = useState(false);
+  const [credencialesGeneradas, setCredencialesGeneradas] = useState({ usuario: '', password: '' });
 
   useEffect(() => {
     const user = authService.getUsuario();
@@ -82,19 +85,28 @@ export default function UsuarioComponent() {
     // Procesar en segundo plano
     try {
       if (modoModal === 'crear') {
-        // Crear usuario con todos los campos
-        await usuarioService.crear({
+        // Crear usuario SIN contraseña (se genera automáticamente en backend)
+        const response = await usuarioService.crear({
           nombre: formData.nombre,
           apellido: formData.apellido,
           email: formData.email,
           telefono: formData.telefono,
           cedula: formData.cedula,
           usuario: formData.usuario,
-          contraseña: formData.contraseña,
+          // NO enviamos contraseña - el backend la genera
           tipo_usuario: formData.tipo_usuario,
           estado: formData.estado,
           conjuntos: formData.conjuntos || []
         });
+        
+        // Mostrar modal con la contraseña generada
+        if (response.contraseñaTemporal) {
+          setCredencialesGeneradas({
+            usuario: formData.usuario,
+            password: response.contraseñaTemporal
+          });
+          setModalPasswordAbierto(true);
+        }
       } else {
         await usuarioService.actualizar(usuarioEditando.id, formData);
       }
@@ -282,6 +294,13 @@ export default function UsuarioComponent() {
         mensaje={`¿Está seguro que desea eliminar al usuario ${usuarioAEliminar?.nombre} ${usuarioAEliminar?.apellido}?`}
         onConfirmar={confirmarEliminacion}
         onCancelar={cancelarEliminacion}
+      />
+
+      <ModalPasswordGenerada
+        isOpen={modalPasswordAbierto}
+        onClose={() => setModalPasswordAbierto(false)}
+        usuario={credencialesGeneradas.usuario}
+        password={credencialesGeneradas.password}
       />
 
       <Notificacion
