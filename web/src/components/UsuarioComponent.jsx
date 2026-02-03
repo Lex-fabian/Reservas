@@ -24,6 +24,8 @@ export default function UsuarioComponent() {
   const [currentUser, setCurrentUser] = useState(null);
   const [modalPasswordAbierto, setModalPasswordAbierto] = useState(false);
   const [credencialesGeneradas, setCredencialesGeneradas] = useState({ usuario: '', password: '' });
+  const [busqueda, setBusqueda] = useState('');
+  const [conjuntoFiltro, setConjuntoFiltro] = useState('');
 
   useEffect(() => {
     const user = authService.getUsuario();
@@ -164,11 +166,26 @@ export default function UsuarioComponent() {
     );
   }
 
+  // Filtrar usuarios por búsqueda y conjunto
+  const usuariosFiltrados = usuarios.filter(usuario => {
+    // Filtro de búsqueda (nombre o cédula)
+    const terminoBusqueda = busqueda.toLowerCase();
+    const nombreCompleto = `${usuario.nombre} ${usuario.apellido}`.toLowerCase();
+    const cedula = usuario.cedula?.toString().toLowerCase() || '';
+    const cumpleBusqueda = nombreCompleto.includes(terminoBusqueda) || cedula.includes(terminoBusqueda);
+    
+    // Filtro de conjunto
+    const cumpleConjunto = !conjuntoFiltro || 
+      (usuario.conjuntos && usuario.conjuntos.some(c => c.id?.toString() === conjuntoFiltro));
+    
+    return cumpleBusqueda && cumpleConjunto;
+  });
+
   // Calcular usuarios para la página actual
   const indiceUltimo = paginaActual * usuariosPorPagina;
   const indicePrimero = indiceUltimo - usuariosPorPagina;
-  const usuariosActuales = usuarios.slice(indicePrimero, indiceUltimo);
-  const totalPaginas = Math.ceil(usuarios.length / usuariosPorPagina);
+  const usuariosActuales = usuariosFiltrados.slice(indicePrimero, indiceUltimo);
+  const totalPaginas = Math.ceil(usuariosFiltrados.length / usuariosPorPagina);
 
   return (
     <div className="contenedor-usuarios">
@@ -180,6 +197,45 @@ export default function UsuarioComponent() {
             <FontAwesomeIcon icon={faUserPlus} /> Nuevo Usuario
           </button>
         </div>
+      </div>
+
+      <div className="filtros-container">
+        <div className="filtro-busqueda">
+          <input
+            type="text"
+            placeholder="Buscar por nombre o cédula..."
+            value={busqueda}
+            onChange={(e) => {
+              setBusqueda(e.target.value);
+              setPaginaActual(1);
+            }}
+            className="input-busqueda"
+          />
+        </div>
+        <div className="filtro-conjunto">
+          <select
+            value={conjuntoFiltro}
+            onChange={(e) => {
+              setConjuntoFiltro(e.target.value);
+              setPaginaActual(1);
+            }}
+            className="select-filtro"
+          >
+            <option value="">Todos los conjuntos</option>
+            {conjuntos
+              .filter(c => c.estado === 'activo')
+              .map(conjunto => (
+                <option key={conjunto.id} value={conjunto.id}>
+                  {conjunto.nombre_conjunto}
+                </option>
+              ))}
+          </select>
+        </div>
+        {(busqueda || conjuntoFiltro) && (
+          <div className="filtros-info">
+            Mostrando {usuariosFiltrados.length} de {usuarios.length} usuarios
+          </div>
+        )}
       </div>
 
       <div className="tabla-wrapper">

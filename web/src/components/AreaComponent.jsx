@@ -21,6 +21,8 @@ export default function AreaComponent() {
   const [modalConfirmacionAbierto, setModalConfirmacionAbierto] = useState(false);
   const [areaAEliminar, setAreaAEliminar] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [busqueda, setBusqueda] = useState('');
+  const [conjuntoFiltro, setConjuntoFiltro] = useState('');
 
   useEffect(() => {
     setCurrentUser(authService.getUsuario());
@@ -117,11 +119,25 @@ export default function AreaComponent() {
     );
   }
 
+  // Filtrar áreas por búsqueda y conjunto
+  const areasFiltradas = areas.filter(area => {
+    // Filtro de búsqueda (nombre del área)
+    const terminoBusqueda = busqueda.toLowerCase();
+    const nombreArea = (area.nombre_area || area.nombre || '').toLowerCase();
+    const cumpleBusqueda = nombreArea.includes(terminoBusqueda);
+    
+    // Filtro de conjunto
+    const idConjunto = area.Conjunto?.id || area.conjunto_id;
+    const cumpleConjunto = !conjuntoFiltro || idConjunto?.toString() === conjuntoFiltro;
+    
+    return cumpleBusqueda && cumpleConjunto;
+  });
+
   // Calcular áreas para la página actual
   const indiceUltimo = paginaActual * areasPorPagina;
   const indicePrimero = indiceUltimo - areasPorPagina;
-  const areasActuales = areas.slice(indicePrimero, indiceUltimo);
-  const totalPaginas = Math.ceil(areas.length / areasPorPagina);
+  const areasActuales = areasFiltradas.slice(indicePrimero, indiceUltimo);
+  const totalPaginas = Math.ceil(areasFiltradas.length / areasPorPagina);
 
   return (
     <div className="contenedor-areas">
@@ -133,6 +149,45 @@ export default function AreaComponent() {
             <FontAwesomeIcon icon={faPlus} /> Nueva Área
           </button>
         </div>
+      </div>
+
+      <div className="filtros-container">
+        <div className="filtro-busqueda">
+          <input
+            type="text"
+            placeholder="Buscar por nombre de área..."
+            value={busqueda}
+            onChange={(e) => {
+              setBusqueda(e.target.value);
+              setPaginaActual(1);
+            }}
+            className="input-busqueda"
+          />
+        </div>
+        <div className="filtro-conjunto">
+          <select
+            value={conjuntoFiltro}
+            onChange={(e) => {
+              setConjuntoFiltro(e.target.value);
+              setPaginaActual(1);
+            }}
+            className="select-filtro"
+          >
+            <option value="">Todos los conjuntos</option>
+            {conjuntos
+              .filter(c => c.estado === 'activo')
+              .map(conjunto => (
+                <option key={conjunto.id} value={conjunto.id}>
+                  {conjunto.nombre_conjunto}
+                </option>
+              ))}
+          </select>
+        </div>
+        {(busqueda || conjuntoFiltro) && (
+          <div className="filtros-info">
+            Mostrando {areasFiltradas.length} de {areas.length} áreas
+          </div>
+        )}
       </div>
 
       <div className="tabla-wrapper">
