@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClipboardList, faUsers, faBuilding, faBullseye, faUser, faCog, faRightFromBracket } from '@fortawesome/free-solid-svg-icons';
+import { faClipboardList, faUsers, faBuilding, faBullseye, faUser, faCog, faRightFromBracket, faChartLine } from '@fortawesome/free-solid-svg-icons';
 import logo from '../assets/icono.jpeg';
 import ReservaComponent from '../components/ReservaComponent';
 import UsuarioComponent from '../components/UsuarioComponent';
@@ -10,6 +10,7 @@ import ConjuntoComponent from '../components/ConjuntoComponent';
 import AreaComponent from '../components/AreaComponent';
 import SistemaComponent from '../components/SistemaComponent';
 import PerfilComponent from '../components/PerfilComponent';
+import AuditoriaComponent from '../components/AuditoriaComponent';
 import ModalConfirmacion from '../components/ModalConfirmacion';
 import '../style/Inicio.css';
 
@@ -78,6 +79,16 @@ export default function Inicio() {
                 <FontAwesomeIcon icon={faCog} /> Sistema
               </button>
             )}
+            
+            {/* Botón Auditoría solo para SuperAdmin */}
+            {usuario?.tipo_usuario === 'superadmin' && (
+              <button 
+                className={`boton-nav ${vistaActual === 'auditoria' ? 'activo' : ''}`}
+                onClick={() => setVistaActual('auditoria')}
+              >
+                <FontAwesomeIcon icon={faChartLine} /> Auditoría
+              </button>
+            )}
           </div>
           <div 
             className="circulo-perfil"
@@ -123,6 +134,8 @@ export default function Inicio() {
           <AreaComponent />
         ) : vistaActual === 'perfil' ? (
           <PerfilComponent />
+        ) : vistaActual === 'auditoria' ? (
+          <AuditoriaComponent />
         ) : (
           <SistemaComponent />
         )}
