@@ -92,6 +92,7 @@ const authController = {
       res.json({
         mensaje: 'Login exitoso',
         token,
+        debe_cambiar_password: usuarioEncontrado.debe_cambiar_password || false,
         usuario: {
           id: usuarioEncontrado.id,
           nombre: usuarioEncontrado.nombre,

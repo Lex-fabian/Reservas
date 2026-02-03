@@ -3,6 +3,7 @@ const Conjunto = require('./Conjunto');
 const Area = require('./Area');
 const Reserva = require('./Reserva');
 const Configuracion = require('./Configuracion');
+const AuditoriaLog = require('./AuditoriaLog');
 
 Usuario.belongsToMany(Conjunto, { 
   through: 'usuario_conjunto', 
@@ -29,10 +30,15 @@ Reserva.belongsTo(Conjunto, { foreignKey: 'conjuntoId' });
 Area.hasMany(Reserva, { foreignKey: 'areaId' });
 Reserva.belongsTo(Area, { foreignKey: 'areaId' });
 
+// Auditoría
+Usuario.hasMany(AuditoriaLog, { foreignKey: 'usuarioId' });
+AuditoriaLog.belongsTo(Usuario, { foreignKey: 'usuarioId' });
+
 module.exports = {
   Usuario,
   Conjunto,
   Area,
   Reserva,
-  Configuracion
+  Configuracion,
+  AuditoriaLog
 };

@@ -72,6 +72,7 @@ app.use('/api/reservas', reservaRoutes);
 app.use('/api/conjuntos', conjuntoRoutes);
 app.use('/api/areas', areaRoutes);
 app.use('/api/configuracion', require('./routes/configuracion.routes'));
+app.use('/api/auditoria', require('./routes/auditoria.routes'));
 
 const path = require('path');
 app.use('/uploads', (req, res, next) => {

@@ -49,6 +49,11 @@ const Usuario = sequelize.define('Usuario', {
   tipo_usuario: {
     type: DataTypes.ENUM('superadmin', 'admin', 'usuario'),
     defaultValue: 'usuario'
+  },
+  debe_cambiar_password: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    allowNull: false
   }
 }, {
   tableName: 'usuarios',

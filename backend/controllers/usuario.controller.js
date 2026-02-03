@@ -1,6 +1,31 @@
 const { Usuario, Reserva, Conjunto } = require('../models');
 const { enviarCredenciales, enviarCambioContraseña } = require('../services/email.service');
 
+// Función para generar contraseña temporal aleatoria
+function generarContraseñaTemporal() {
+  const longitud = 12;
+  const mayusculas = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const minusculas = 'abcdefghijklmnopqrstuvwxyz';
+  const numeros = '0123456789';
+  const especiales = '@#$%&*';
+  const todos = mayusculas + minusculas + numeros + especiales;
+  
+  let contraseña = '';
+  // Asegurar al menos un carácter de cada tipo
+  contraseña += mayusculas[Math.floor(Math.random() * mayusculas.length)];
+  contraseña += minusculas[Math.floor(Math.random() * minusculas.length)];
+  contraseña += numeros[Math.floor(Math.random() * numeros.length)];
+  contraseña += especiales[Math.floor(Math.random() * especiales.length)];
+  
+  // Completar el resto
+  for (let i = contraseña.length; i < longitud; i++) {
+    contraseña += todos[Math.floor(Math.random() * todos.length)];
+  }
+  
+  // Mezclar los caracteres
+  return contraseña.split('').sort(() => Math.random() - 0.5).join('');
+}
+
 const usuarioController = {
   async obtenerTodos(req, res) {
     try {
@@ -94,7 +119,8 @@ const usuarioController = {
 
   async crear(req, res) {
     try {
-      const { nombre, apellido, email, telefono, cedula, usuario, contraseña, tipo_usuario, estado, conjuntos } = req.body;
+      const { nombre, apellido, email, telefono, cedula, usuario, tipo_usuario, estado, conjuntos } = req.body;
+      // NOTA: La contraseña ya NO viene del frontend, se genera automáticamente
 
       // RBAC: Admin no puede crear SuperAdmin ni Admin
       if (!req.esSuperAdmin && (tipo_usuario === 'admin' || tipo_usuario === 'superadmin')) {
@@ -122,6 +148,9 @@ const usuarioController = {
         return res.status(400).json({ error: 'El nombre de usuario ya está en uso' });
       }
 
+      // GENERAR CONTRASEÑA TEMPORAL AUTOMÁTICAMENTE
+      const contraseñaTemporal = generarContraseñaTemporal();
+
       // Crear el usuario
       const nuevoUsuario = await Usuario.create({
         nombre,
@@ -130,9 +159,10 @@ const usuarioController = {
         telefono: telefono || null,
         cedula: cedula || null,
         usuario,
-        contraseña,
+        contraseña: contraseñaTemporal,
         tipo_usuario: tipo_usuario || 'usuario',
-        estado: estado || 'activo'
+        estado: estado || 'activo',
+        debe_cambiar_password: true  // Forzar cambio en primer login
       });
 
       // Asignar conjuntos
@@ -144,7 +174,7 @@ const usuarioController = {
       }
 
       // Enviar correo con credenciales
-      const correoEnviado = await enviarCredenciales(email, usuario, contraseña);
+      const correoEnviado = await enviarCredenciales(email, usuario, contraseñaTemporal);
 
       const usuarioCreado = await Usuario.findByPk(nuevoUsuario.id, {
         attributes: { exclude: ['contraseña'] },
@@ -159,8 +189,8 @@ const usuarioController = {
       res.status(201).json({
         mensaje: correoEnviado ? 'Usuario creado y credenciales enviadas' : 'Usuario creado, pero falló el envío de correo',
         usuario: usuarioCreado,
-        // Devolver contraseña TEMPORALMENTE para mostrar en frontend (WhatsApp)
-        credenciales: { usuario, contraseña }
+        // Devolver contraseña temporal para mostrar en frontend
+        contraseñaTemporal: contraseñaTemporal
       });
     } catch (error) {
       console.error('Error al crear usuario:', error);
@@ -321,8 +351,9 @@ const usuarioController = {
         return res.status(401).json({ error: 'Contraseña actual incorrecta' });
       }
 
-      // Actualizar contraseña
+      // Actualizar contraseña y resetear flag de cambio obligatorio
       usuario.contraseña = contraseñaNueva;
+      usuario.debe_cambiar_password = false;
       await usuario.save();
 
       // Enviar email de notificación
@@ -336,6 +367,51 @@ const usuarioController = {
       res.json({ mensaje: 'Contraseña actualizada exitosamente' });
     } catch (error) {
       console.error('Error al cambiar contraseña:', error);
+      res.status(500).json({ error: 'Error al cambiar la contraseña' });
+    }
+  },
+
+  // Nuevo endpoint: Cambiar contraseña obligatoria (primer login)
+  async cambiarPasswordObligatoria(req, res) {
+    try {
+      const usuarioId = req.usuario.id;
+      const { contraseñaActual, contraseñaNueva } = req.body;
+
+      if (!contraseñaActual || !contraseñaNueva) {
+        return res.status(400).json({ error: 'Se requieren ambas contraseñas' });
+      }
+
+      if (contraseñaNueva.length < 6) {
+        return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+      }
+
+      const usuario = await Usuario.findByPk(usuarioId);
+      if (!usuario) {
+        return res.status(404).json({ error: 'Usuario no encontrado' });
+      }
+
+      // Verificar que realmente deba cambiar la contraseña
+      if (!usuario.debe_cambiar_password) {
+        return res.status(400).json({ error: 'No es necesario cambiar la contraseña' });
+      }
+
+      // Verificar contraseña temporal
+      const contraseñaValida = await usuario.validarContraseña(contraseñaActual);
+      if (!contraseñaValida) {
+        return res.status(401).json({ error: 'Contraseña temporal incorrecta' });
+      }
+
+      // Actualizar contraseña y resetear flag
+      usuario.contraseña = contraseñaNueva;
+      usuario.debe_cambiar_password = false;
+      await usuario.save();
+
+      res.json({ 
+        mensaje: 'Contraseña cambiada exitosamente',
+        debe_cambiar_password: false
+      });
+    } catch (error) {
+      console.error('Error al cambiar contraseña obligatoria:', error);
       res.status(500).json({ error: 'Error al cambiar la contraseña' });
     }
   }
