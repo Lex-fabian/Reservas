@@ -1,7 +1,6 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-// Log de debug para verificar variables de entorno
 console.log(' Verificando configuración de BD:');
 console.log('DB_HOST:', process.env.DB_HOST || 'NO CONFIGURADO');
 console.log('DB_PORT:', process.env.DB_PORT || 'NO CONFIGURADO');
@@ -21,7 +20,7 @@ const sequelize = new Sequelize(
     pool: {
       max: 5,
       min: 0,
-      acquire: 30000,
+      acquire: 60000,
       idle: 10000
     },
     dialectOptions: {

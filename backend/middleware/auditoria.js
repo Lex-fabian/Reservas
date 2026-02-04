@@ -1,4 +1,4 @@
-const auditoriaController = require('../controllers/auditoria.controller');
+const auditoriaService = require('../services/auditoria.service');
 
 /**
  * Middleware para registrar automáticamente acciones en la auditoría
@@ -6,15 +6,10 @@ const auditoriaController = require('../controllers/auditoria.controller');
  */
 const registrarAuditoria = (accion, entidad) => {
   return async (req, res, next) => {
-    // Guardar el método send original
     const originalSend = res.send;
     const originalJson = res.json;
-
-    // Obtener IP y User Agent
     const ip = req.ip || req.connection.remoteAddress;
     const userAgent = req.headers['user-agent'];
-
-    // Función para registrar el log
     const registrarLog = async (datosRespuesta) => {
       try {
         if (req.usuario && res.statusCode >= 200 && res.statusCode < 300) {
@@ -24,27 +19,24 @@ const registrarAuditoria = (accion, entidad) => {
             descripcion: generarDescripcion(accion, entidad, req, datosRespuesta)
           };
 
-          // Para operaciones de actualización, intentar capturar datos anteriores
           if (accion === 'actualizar' && req.params.id) {
             datos.entidadId = req.params.id;
             datos.datosAnteriores = req.datosAnteriores || null;
             datos.datosNuevos = req.body;
           }
 
-          // Para operaciones de creación, guardar el ID creado
           if (accion === 'crear' && datosRespuesta) {
             const entidadCreada = datosRespuesta[entidad] || datosRespuesta.data || datosRespuesta;
             datos.entidadId = entidadCreada?.id || null;
             datos.datosNuevos = req.body;
           }
 
-          // Para operaciones de eliminación
           if (accion === 'eliminar' && req.params.id) {
             datos.entidadId = req.params.id;
             datos.datosAnteriores = req.datosAnteriores || null;
           }
 
-          await auditoriaController.crear(
+          await auditoriaService.crear(
             req.usuario.id,
             accion,
             entidad,
@@ -53,23 +45,19 @@ const registrarAuditoria = (accion, entidad) => {
         }
       } catch (error) {
         console.error('Error en middleware de auditoría:', error);
-        // No interrumpimos la ejecución si falla el log
       }
     };
 
-    // Interceptar res.json
     res.json = function(data) {
       registrarLog(data);
       return originalJson.call(this, data);
     };
 
-    // Interceptar res.send
     res.send = function(data) {
       try {
         const jsonData = typeof data === 'string' ? JSON.parse(data) : data;
         registrarLog(jsonData);
       } catch (e) {
-        // Si no es JSON, continuar sin registrar
       }
       return originalSend.call(this, data);
     };
@@ -78,12 +66,9 @@ const registrarAuditoria = (accion, entidad) => {
   };
 };
 
-/**
- * Genera una descripción legible para el log
- */
 function generarDescripcion(accion, entidad, req, datosRespuesta) {
   const usuario = req.usuario;
-  const nombreUsuario = `${usuario.nombre || usuario.usuario}`;
+  const nombreUsuario = usuario.nombre || usuario.usuario || usuario.email || 'Usuario desconocido';
   
   let descripcion = '';
 
@@ -119,9 +104,6 @@ function generarDescripcion(accion, entidad, req, datosRespuesta) {
   return descripcion;
 }
 
-/**
- * Genera descripción detallada para creación
- */
 function generarDescripcionCrear(nombreUsuario, entidad, datos, respuesta) {
   let detalles = '';
   
@@ -159,9 +141,6 @@ function generarDescripcionCrear(nombreUsuario, entidad, datos, respuesta) {
   return `${nombreUsuario} creó ${detalles}`;
 }
 
-/**
- * Genera descripción detallada para actualización
- */
 function generarDescripcionActualizar(nombreUsuario, entidad, id, datosNuevos, datosAnteriores) {
   let cambios = [];
   
@@ -221,31 +200,38 @@ function generarDescripcionActualizar(nombreUsuario, entidad, id, datosNuevos, d
       break;
   }
   
+  // Generar nombre de la entidad con fallback
   let nombreEntidad = entidad;
   if (datosAnteriores) {
     switch (entidad) {
       case 'usuario':
-        nombreEntidad = `usuario "${datosAnteriores.usuario || datosAnteriores.email}"`;
+        nombreEntidad = datosAnteriores.usuario || datosAnteriores.email 
+          ? `usuario "${datosAnteriores.usuario || datosAnteriores.email}"`
+          : `usuario #${id}`;
         break;
       case 'area':
-        nombreEntidad = `área "${datosAnteriores.nombre_area}"`;
+        nombreEntidad = datosAnteriores.nombre_area 
+          ? `área "${datosAnteriores.nombre_area}"`
+          : `área #${id}`;
         break;
       case 'conjunto':
-        nombreEntidad = `conjunto "${datosAnteriores.nombre_conjunto}"`;
+        nombreEntidad = datosAnteriores.nombre_conjunto 
+          ? `conjunto "${datosAnteriores.nombre_conjunto}"`
+          : `conjunto #${id}`;
         break;
       case 'reserva':
         nombreEntidad = `reserva #${id}`;
         break;
     }
+  } else {
+    // Si no hay datos anteriores, usar ID
+    nombreEntidad = `${entidad} #${id}`;
   }
   
   const detallesCambios = cambios.length > 0 ? `: ${cambios.join(', ')}` : '';
   return `${nombreUsuario} actualizó ${nombreEntidad}${detallesCambios}`;
 }
 
-/**
- * Genera descripción detallada para eliminación
- */
 function generarDescripcionEliminar(nombreUsuario, entidad, id, datosAnteriores) {
   let detalles = `#${id}`;
   
@@ -279,9 +265,6 @@ function generarDescripcionEliminar(nombreUsuario, entidad, id, datosAnteriores)
   return `${nombreUsuario} eliminó ${detalles}`;
 }
 
-/**
- * Genera descripción para acciones de reserva
- */
 function generarDescripcionReserva(nombreUsuario, accion, id, respuesta) {
   let detalles = `reserva #${id}`;
   
@@ -305,17 +288,11 @@ function generarDescripcionReserva(nombreUsuario, accion, id, respuesta) {
   return `${nombreUsuario} ${accion} ${detalles}`;
 }
 
-/**
- * Genera descripción para cambio de estado
- */
 function generarDescripcionCambioEstado(nombreUsuario, entidad, id, datos) {
   const nuevoEstado = datos.estado || datos.activo;
   return `${nombreUsuario} cambió estado de ${entidad} #${id} a "${nuevoEstado}"`;
 }
 
-/**
- * Registrar login
- */
 const registrarLogin = async (req, res, next) => {
   const originalJson = res.json;
   
@@ -324,7 +301,7 @@ const registrarLogin = async (req, res, next) => {
       const ip = req.ip || req.connection.remoteAddress;
       const userAgent = req.headers['user-agent'];
       
-      auditoriaController.crear(
+      auditoriaService.crear(
         data.usuario.id,
         'login',
         'auth',

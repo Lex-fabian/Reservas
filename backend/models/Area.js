@@ -25,7 +25,7 @@ const Area = sequelize.define('Area', {
     defaultValue: 10
   },
   fotos: {
-    type: DataTypes.TEXT('long'), // LONGTEXT para imágenes base64 grandes
+    type: DataTypes.TEXT('long'), 
     allowNull: true
   },
   costo: {

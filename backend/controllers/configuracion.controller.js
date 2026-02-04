@@ -1,56 +1,24 @@
-const { Configuracion } = require('../models');
+const configuracionService = require('../services/configuracion.service');
 
 const configuracionController = {
-  // Obtener la configuración actual (asumimos que solo hay una o tomamos la primera/última)
   async getConfig(req, res) {
     try {
-      const config = await Configuracion.findOne();
-      if (!config) {
-        return res.json({ 
-          banco: '', 
-          tipo_cuenta: 'Ahorro', 
-          numero_cuenta: '', 
-          nombre_titular: '',
-          cedula_titular: ''
-        });
-      }
+      const config = await configuracionService.obtener();
       res.json(config);
     } catch (error) {
       console.error('Error al obtener configuración:', error);
-      res.status(500).json({ error: 'Error al obtener configuración' });
+      const statusCode = error.statusCode || 500;
+      res.status(statusCode).json({ error: error.message || 'Error al obtener configuración' });
     }
   },
 
-  // Crear o actualizar la configuración
+  // CREAR O ACTUALIZAR LA CONFIGURACIÓN
   async updateConfig(req, res) {
     try {
-      const { banco, tipo_cuenta, numero_cuenta, nombre_titular, cedula_titular } = req.body;
+      // VERIFICAR PERMISOS
+      configuracionService.validarPermisos(req.usuario);
 
-      // Verificar permisos
-      if (req.usuario.tipo_usuario !== 'superadmin') {
-        return res.status(403).json({ error: 'No tienes permiso para modificar la configuración' });
-      }
-
-      let config = await Configuracion.findOne();
-
-      if (config) {
-        // Actualizar existente
-        config.banco = banco;
-        config.tipo_cuenta = tipo_cuenta;
-        config.numero_cuenta = numero_cuenta;
-        config.nombre_titular = nombre_titular;
-        config.cedula_titular = cedula_titular;
-        await config.save();
-      } else {
-        // Crear nueva
-        config = await Configuracion.create({
-          banco,
-          tipo_cuenta,
-          numero_cuenta,
-          nombre_titular,
-          cedula_titular
-        });
-      }
+      const config = await configuracionService.actualizarOCrear(req.body);
 
       res.json({
         message: 'Configuración actualizada exitosamente',
@@ -58,7 +26,8 @@ const configuracionController = {
       });
     } catch (error) {
       console.error('Error al actualizar configuración:', error);
-      res.status(500).json({ error: 'Error al actualizar configuración' });
+      const statusCode = error.statusCode || 500;
+      res.status(statusCode).json({ error: error.message || 'Error al actualizar configuración' });
     }
   }
 };

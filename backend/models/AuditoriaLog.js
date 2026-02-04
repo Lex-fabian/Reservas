@@ -58,7 +58,7 @@ const AuditoriaLog = sequelize.define('AuditoriaLog', {
 }, {
   tableName: 'auditoria_logs',
   timestamps: true,
-  updatedAt: false // Solo necesitamos createdAt
+  updatedAt: false 
 });
 
 module.exports = AuditoriaLog;

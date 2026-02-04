@@ -11,7 +11,7 @@ const requireSuperAdmin = (req, res, next) => {
   next();
 };
 
-// Obtener estadísticas (debe ir primero para evitar conflicto con /:id)
+// Obtener estadísticas
 router.get('/estadisticas', verificarToken, requireSuperAdmin, auditoriaController.obtenerEstadisticas);
 
 // Obtener todos los logs con filtros

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const configuracionController = require('../controllers/configuracion.controller');
 const { verificarToken } = require('../middleware/auth');
-const { verificarAdmin } = require('../middleware/security'); // O usar lógica de roles en controlador
+const { verificarAdmin } = require('../middleware/security'); 
 
 // Rutas protegidas
 router.use(verificarToken);

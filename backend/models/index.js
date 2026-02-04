@@ -30,7 +30,6 @@ Reserva.belongsTo(Conjunto, { foreignKey: 'conjuntoId' });
 Area.hasMany(Reserva, { foreignKey: 'areaId' });
 Reserva.belongsTo(Area, { foreignKey: 'areaId' });
 
-// Auditoría
 Usuario.hasMany(AuditoriaLog, { foreignKey: 'usuarioId' });
 AuditoriaLog.belongsTo(Usuario, { foreignKey: 'usuarioId' });
 

@@ -5,7 +5,6 @@ const { verificarToken, esSuperAdmin, esAdminOSuper } = require('../middleware/a
 const { registrarAuditoria } = require('../middleware/auditoria');
 const { capturarDatosAnteriores } = require('../middleware/capturarDatosAnteriores');
 
-// Todas las rutas requieren autenticación
 router.use(verificarToken);
 
 // Rutas CRUD

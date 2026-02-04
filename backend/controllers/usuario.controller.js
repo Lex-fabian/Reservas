@@ -1,410 +1,146 @@
-const { Usuario, Reserva, Conjunto } = require('../models');
-const { enviarCredenciales, enviarCambioContraseña } = require('../services/email.service');
-
-// Función para generar contraseña temporal aleatoria
-function generarContraseñaTemporal() {
-  const longitud = 12;
-  const mayusculas = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const minusculas = 'abcdefghijklmnopqrstuvwxyz';
-  const numeros = '0123456789';
-  const especiales = '@#$%&*';
-  const todos = mayusculas + minusculas + numeros + especiales;
-  
-  let contraseña = '';
-  // Asegurar al menos un carácter de cada tipo
-  contraseña += mayusculas[Math.floor(Math.random() * mayusculas.length)];
-  contraseña += minusculas[Math.floor(Math.random() * minusculas.length)];
-  contraseña += numeros[Math.floor(Math.random() * numeros.length)];
-  contraseña += especiales[Math.floor(Math.random() * especiales.length)];
-  
-  // Completar el resto
-  for (let i = contraseña.length; i < longitud; i++) {
-    contraseña += todos[Math.floor(Math.random() * todos.length)];
-  }
-  
-  // Mezclar los caracteres
-  return contraseña.split('').sort(() => Math.random() - 0.5).join('');
-}
+const usuarioService = require('../services/usuario.service');
 
 const usuarioController = {
   async obtenerTodos(req, res) {
     try {
-      const { estado, tipo_usuario } = req.query;
-      const whereClause = {};
+      const usuarioActual = {
+        esSuperAdmin: req.esSuperAdmin,
+        scopeConjuntos: req.scopeConjuntos
+      };
 
-      if (estado) whereClause.estado = estado;
-      if (tipo_usuario) whereClause.tipo_usuario = tipo_usuario;
-
-      // SCOPED ACCESS: Si no es SuperAdmin, filtrar por scopeConjuntos
-      if (!req.esSuperAdmin && req.scopeConjuntos) {
-        // Encontrar usuarios asociados a los conjuntos del admin
-        const usuariosIds = await Usuario.findAll({
-          include: [{
-            model: Conjunto,
-            as: 'conjuntos',
-            where: { id: req.scopeConjuntos },
-            attributes: []
-          }],
-          attributes: ['id']
-        });
-        
-        whereClause.id = usuariosIds.map(u => u.id);
-      }
-
-      const usuarios = await Usuario.findAll({
-        where: whereClause,
-        attributes: { exclude: ['contraseña'] },
-        include: [
-          {
-            model: Reserva,
-            as: 'Reservas',
-            attributes: ['id', 'estado']
-          },
-          {
-            model: Conjunto,
-            as: 'conjuntos',
-            as: 'conjuntos',
-            attributes: ['id', 'nombre_conjunto'],
-            through: { attributes: [] }
-          }
-        ],
-        order: [['createdAt', 'DESC']]
-      });
+      const usuarios = await usuarioService.obtenerTodos(usuarioActual, req.query);
 
       res.json({ usuarios });
     } catch (error) {
       console.error('Error al obtener usuarios:', error);
-      res.status(500).json({ error: 'Error al obtener usuarios' });
+      const statusCode = error.statusCode || 500;
+      res.status(statusCode).json({ error: error.message || 'Error al obtener usuarios' });
     }
   },
 
   async obtenerPorId(req, res) {
     try {
-      const { id } = req.params;
+      const usuarioActual = {
+        id: req.usuario.id,
+        esSuperAdmin: req.esSuperAdmin,
+        scopeConjuntos: req.scopeConjuntos
+      };
 
-      const usuario = await Usuario.findByPk(id, {
-        attributes: { exclude: ['contraseña'] },
-        include: [
-          { model: Reserva, as: 'Reservas' },
-          {
-            model: Conjunto,
-            as: 'conjuntos',
-            attributes: ['id', 'nombre_conjunto'],
-            through: { attributes: [] }
-          }
-        ]
-      });
-
-      if (!usuario) {
-        return res.status(404).json({ error: 'Usuario no encontrado' });
-      }
-
-      // SCOPED ACCESS
-      if (!req.esSuperAdmin && req.scopeConjuntos) {
-        const pertenece = usuario.conjuntos.some(c => req.scopeConjuntos.includes(c.id));
-        if (!pertenece && usuario.tipo_usuario !== 'admin') { // Permitir ver perfil propio o usuarios de sus conjuntos
-             // Nota: Lógica simplificada, idealmente chequear si el ID es del propio admin también
-             if (usuario.id !== req.usuario.id) {
-                 return res.status(403).json({ error: 'Acceso denegado a este usuario' });
-             }
-        }
-      }
+      const usuario = await usuarioService.obtenerPorId(req.params.id, usuarioActual);
 
       res.json({ usuario });
     } catch (error) {
       console.error('Error al obtener usuario:', error);
-      res.status(500).json({ error: 'Error al obtener usuario' });
+      const statusCode = error.statusCode || 500;
+      res.status(statusCode).json({ error: error.message || 'Error al obtener usuario' });
     }
   },
 
   async crear(req, res) {
     try {
-      const { nombre, apellido, email, telefono, cedula, usuario, tipo_usuario, estado, conjuntos } = req.body;
-      // NOTA: La contraseña ya NO viene del frontend, se genera automáticamente
+      const usuarioActual = {
+        tipo_usuario: req.usuario.tipo_usuario,
+        esSuperAdmin: req.esSuperAdmin,
+        scopeConjuntos: req.scopeConjuntos
+      };
 
-      // RBAC: Admin no puede crear SuperAdmin ni Admin
-      if (!req.esSuperAdmin && (tipo_usuario === 'admin' || tipo_usuario === 'superadmin')) {
-        return res.status(403).json({ error: 'No tienes permisos para crear este rol' });
-      }
-
-      // RBAC: Admin solo puede asignar conjuntos de su scope
-      if (!req.esSuperAdmin && conjuntos && conjuntos.length > 0) {
-        const conjuntosValidos = conjuntos.every(id => req.scopeConjuntos.includes(id));
-        if (!conjuntosValidos) {
-          return res.status(403).json({ error: 'No puedes asignar conjuntos fuera de tu jurisdicción' });
-        }
-      }
-
-      // Validaciones manejadas por express-validator se asumen hechas previas en rutas
-      // Verificar si el email ya existe
-      const emailExiste = await Usuario.findOne({ where: { email } });
-      if (emailExiste) {
-        return res.status(400).json({ error: 'El email ya está registrado' });
-      }
-
-      // Verificar si el usuario ya existe
-      const usuarioExiste = await Usuario.findOne({ where: { usuario } });
-      if (usuarioExiste) {
-        return res.status(400).json({ error: 'El nombre de usuario ya está en uso' });
-      }
-
-      // GENERAR CONTRASEÑA TEMPORAL AUTOMÁTICAMENTE
-      const contraseñaTemporal = generarContraseñaTemporal();
-
-      // Crear el usuario
-      const nuevoUsuario = await Usuario.create({
-        nombre,
-        apellido,
-        email,
-        telefono: telefono || null,
-        cedula: cedula || null,
-        usuario,
-        contraseña: contraseñaTemporal,
-        tipo_usuario: tipo_usuario || 'usuario',
-        estado: estado || 'activo',
-        debe_cambiar_password: true  // Forzar cambio en primer login
-      });
-
-      // Asignar conjuntos
-      if (conjuntos && Array.isArray(conjuntos) && conjuntos.length > 0) {
-        await nuevoUsuario.setConjuntos(conjuntos);
-      } else if (!req.esSuperAdmin) {
-        // Si es Admin y crea un usuario sin conjuntos, asignarle TODOS los del Admin por defecto? 
-        // Mejor requerir selección explícita o asignar scope. Por seguridad, no auto-asignar sin aviso.
-      }
-
-      // Enviar correo con credenciales
-      const correoEnviado = await enviarCredenciales(email, usuario, contraseñaTemporal);
-
-      const usuarioCreado = await Usuario.findByPk(nuevoUsuario.id, {
-        attributes: { exclude: ['contraseña'] },
-        include: [{
-          model: Conjunto,
-          as: 'conjuntos',
-          attributes: ['id', 'nombre_conjunto'],
-          through: { attributes: [] }
-        }]
-      });
+      const resultado = await usuarioService.crear(usuarioActual, req.body);
 
       res.status(201).json({
-        mensaje: correoEnviado ? 'Usuario creado y credenciales enviadas' : 'Usuario creado, pero falló el envío de correo',
-        usuario: usuarioCreado,
-        // Devolver contraseña temporal para mostrar en frontend
-        contraseñaTemporal: contraseñaTemporal
+        mensaje: resultado.correoEnviado 
+          ? 'Usuario creado y credenciales enviadas' 
+          : 'Usuario creado, pero falló el envío de correo',
+        usuario: resultado.usuario,
+        contraseñaTemporal: resultado.contraseñaTemporal
       });
     } catch (error) {
       console.error('Error al crear usuario:', error);
-      res.status(500).json({ error: 'Error al crear usuario' });
+      const statusCode = error.statusCode || 500;
+      res.status(statusCode).json({ error: error.message || 'Error al crear usuario' });
     }
   },
 
   async actualizar(req, res) {
     try {
-      const { id } = req.params;
-      const { nombre, apellido, email, telefono, cedula, estado, tipo_usuario, contraseña, conjuntos } = req.body;
-
-      const usuario = await Usuario.findByPk(id);
-
-      if (!usuario) {
-        return res.status(404).json({ error: 'Usuario no encontrado' });
-      }
-
-      // RBAC Check Scope para Update
-      if (!req.esSuperAdmin) {
-         // Validar que el usuario a editar pertenezca a sus conjuntos o sea él mismo
-           // (Lógica simplificada, asumimos control de acceso en obtención o middleware previo si existiera)
-      }
-
-      const updateData = {
-        nombre: nombre || usuario.nombre,
-        apellido: apellido || usuario.apellido,
-        email: email || usuario.email,
-        telefono: telefono || usuario.telefono,
-        cedula: cedula || usuario.cedula,
-        estado: estado || usuario.estado,
-        tipo_usuario: tipo_usuario || usuario.tipo_usuario
+      const usuarioActual = {
+        esSuperAdmin: req.esSuperAdmin,
+        scopeConjuntos: req.scopeConjuntos
       };
 
-      // Solo actualizar contraseña si se proporciona
-      let contraseñaCambiada = false;
-      if (contraseña && contraseña.trim() !== '') {
-        updateData.contraseña = contraseña;
-        contraseñaCambiada = true;
-      }
-
-      await usuario.update(updateData);
-
-      // Actualizar conjuntos si se proporcionan
-      if (conjuntos && Array.isArray(conjuntos)) {
-         if (!req.esSuperAdmin) {
-            const validos = conjuntos.every(c => req.scopeConjuntos.includes(c));
-            if (!validos) return res.status(403).json({ error: 'Conjuntos fuera de alcance' });
-         }
-        await usuario.setConjuntos(conjuntos);
-      }
-
-      // Enviar correo si se cambió la contraseña
-      if (contraseñaCambiada) {
-        try {
-          await enviarCambioContraseña(usuario.email, usuario.usuario, contraseña);
-        } catch (emailError) {
-          console.error('❌ Error al enviar correo de cambio de contraseña:', emailError.message);
-          // No fallar la actualización si el correo falla
-        }
-      }
-
-      const usuarioActualizado = await Usuario.findByPk(id, {
-        attributes: { exclude: ['contraseña'] },
-        include: [{
-          model: Conjunto,
-          as: 'conjuntos',
-          attributes: ['id', 'nombre_conjunto'],
-          through: { attributes: [] }
-        }]
-      });
+      const resultado = await usuarioService.actualizar(req.params.id, usuarioActual, req.body);
 
       res.json({
-        mensaje: contraseñaCambiada 
+        mensaje: resultado.contraseñaCambiada 
           ? 'Usuario actualizado y nueva contraseña enviada por correo' 
           : 'Usuario actualizado exitosamente',
-        usuario: usuarioActualizado
+        usuario: resultado.usuario
       });
     } catch (error) {
       console.error('Error al actualizar usuario:', error);
-      res.status(500).json({ error: 'Error al actualizar usuario' });
+      const statusCode = error.statusCode || 500;
+      res.status(statusCode).json({ error: error.message || 'Error al actualizar usuario' });
     }
   },
 
   async eliminar(req, res) {
     try {
-      const { id } = req.params;
-
-      const usuario = await Usuario.findByPk(id);
-
-      if (!usuario) {
-        return res.status(404).json({ error: 'Usuario no encontrado' });
-      }
-
-      await usuario.destroy();
+      await usuarioService.eliminar(req.params.id);
 
       res.json({ mensaje: 'Usuario eliminado exitosamente' });
     } catch (error) {
       console.error('Error al eliminar usuario:', error);
-      res.status(500).json({ error: 'Error al eliminar usuario' });
+      const statusCode = error.statusCode || 500;
+      res.status(statusCode).json({ error: error.message || 'Error al eliminar usuario' });
     }
   },
 
   async cambiarEstado(req, res) {
     try {
-      const { id } = req.params;
-      const { estado } = req.body;
+      const usuarioActual = {
+        esSuperAdmin: req.esSuperAdmin
+      };
 
-      if (!['activo', 'inactivo'].includes(estado)) {
-        return res.status(400).json({ error: 'Estado inválido' });
-      }
+      const usuario = await usuarioService.cambiarEstado(
+        req.params.id, 
+        req.body.estado, 
+        usuarioActual
+      );
 
-      const usuario = await Usuario.findByPk(id);
-
-      if (!usuario) {
-        return res.status(404).json({ error: 'Usuario no encontrado' });
-      }
-
-      // RBAC: Admin no puede cambiar estado de superadmin
-      if (!req.esSuperAdmin && usuario.tipo_usuario === 'superadmin') {
-         return res.status(403).json({ error: 'No tienes permiso para modificar a un SuperAdmin' });
-      }
-
-      // RBAC: Validar scope si es admin
-      if (!req.esSuperAdmin && req.scopeConjuntos) {
-         // Verificar si el usuario objetivo pertenece a los conjuntos del admin
-         // (Aunque idealmente cambiar estado de usuarios fuera de scope se filtra antes, 
-         // validamos aquí por seguridad adicional)
-      }
-
-      usuario.estado = estado;
-      await usuario.save();
-
-      res.json({ mensaje: `Usuario ${estado} correctamente`, usuario });
+      res.json({ mensaje: `Usuario ${req.body.estado} correctamente`, usuario });
     } catch (error) {
       console.error('Error al cambiar estado:', error);
-      res.status(500).json({ error: 'Error al cambiar estado del usuario' });
+      const statusCode = error.statusCode || 500;
+      res.status(statusCode).json({ error: error.message || 'Error al cambiar estado del usuario' });
     }
   },
 
   async cambiarContraseñaPropia(req, res) {
     try {
-      const usuarioId = req.usuario.id;
       const { contraseñaActual, contraseñaNueva } = req.body;
 
-      if (!contraseñaActual || !contraseñaNueva) {
-        return res.status(400).json({ error: 'Se requieren ambas contraseñas' });
-      }
-
-      const usuario = await Usuario.findByPk(usuarioId);
-      if (!usuario) {
-        return res.status(404).json({ error: 'Usuario no encontrado' });
-      }
-
-      // Verificar contraseña actual
-      const contraseñaValida = await usuario.validarContraseña(contraseñaActual);
-      if (!contraseñaValida) {
-        return res.status(401).json({ error: 'Contraseña actual incorrecta' });
-      }
-
-      // Actualizar contraseña y resetear flag de cambio obligatorio
-      usuario.contraseña = contraseñaNueva;
-      usuario.debe_cambiar_password = false;
-      await usuario.save();
-
-      // Enviar email de notificación
-      try {
-        await enviarCambioContraseña(usuario.email, usuario.usuario, contraseñaNueva);
-      } catch (emailError) {
-        console.error('Error al enviar email:', emailError);
-        // No fallar la operación si el email falla
-      }
+      await usuarioService.cambiarContraseñaPropia(
+        req.usuario.id,
+        contraseñaActual,
+        contraseñaNueva
+      );
 
       res.json({ mensaje: 'Contraseña actualizada exitosamente' });
     } catch (error) {
       console.error('Error al cambiar contraseña:', error);
-      res.status(500).json({ error: 'Error al cambiar la contraseña' });
+      const statusCode = error.statusCode || 500;
+      res.status(statusCode).json({ error: error.message || 'Error al cambiar la contraseña' });
     }
   },
 
-  // Nuevo endpoint: Cambiar contraseña obligatoria (primer login)
   async cambiarPasswordObligatoria(req, res) {
     try {
-      const usuarioId = req.usuario.id;
       const { contraseñaActual, contraseñaNueva } = req.body;
 
-      if (!contraseñaActual || !contraseñaNueva) {
-        return res.status(400).json({ error: 'Se requieren ambas contraseñas' });
-      }
-
-      if (contraseñaNueva.length < 6) {
-        return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
-      }
-
-      const usuario = await Usuario.findByPk(usuarioId);
-      if (!usuario) {
-        return res.status(404).json({ error: 'Usuario no encontrado' });
-      }
-
-      // Verificar que realmente deba cambiar la contraseña
-      if (!usuario.debe_cambiar_password) {
-        return res.status(400).json({ error: 'No es necesario cambiar la contraseña' });
-      }
-
-      // Verificar contraseña temporal
-      const contraseñaValida = await usuario.validarContraseña(contraseñaActual);
-      if (!contraseñaValida) {
-        return res.status(401).json({ error: 'Contraseña temporal incorrecta' });
-      }
-
-      // Actualizar contraseña y resetear flag
-      usuario.contraseña = contraseñaNueva;
-      usuario.debe_cambiar_password = false;
-      await usuario.save();
+      await usuarioService.cambiarPasswordObligatoria(
+        req.usuario.id,
+        contraseñaActual,
+        contraseñaNueva
+      );
 
       res.json({ 
         mensaje: 'Contraseña cambiada exitosamente',
@@ -412,7 +148,8 @@ const usuarioController = {
       });
     } catch (error) {
       console.error('Error al cambiar contraseña obligatoria:', error);
-      res.status(500).json({ error: 'Error al cambiar la contraseña' });
+      const statusCode = error.statusCode || 500;
+      res.status(statusCode).json({ error: error.message || 'Error al cambiar la contraseña' });
     }
   }
 };

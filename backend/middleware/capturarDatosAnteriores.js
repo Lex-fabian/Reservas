@@ -40,14 +40,12 @@ const capturarDatosAnteriores = (modelo) => {
       const registro = await ModeloClass.findByPk(id, { include });
       
       if (registro) {
-        // Guardar en req para que el middleware de auditoría lo use
         req.datosAnteriores = registro.toJSON();
       }
 
       next();
     } catch (error) {
       console.error('Error capturando datos anteriores:', error);
-      // No interrumpir la ejecución
       next();
     }
   };
