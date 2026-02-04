@@ -57,11 +57,9 @@ export default function ConjuntoComponent() {
   };
 
   const handleSubmit = async (formData) => {
-    // Cerrar modal inmediatamente
     cerrarModal();
     setNotificacionVisible(true);
     
-    // Procesar en segundo plano
     try {
       if (modoModal === 'crear') {
         await conjuntoService.crear(formData);
@@ -110,7 +108,6 @@ export default function ConjuntoComponent() {
     );
   }
 
-  // Calcular conjuntos para la página actual
   const indiceUltimo = paginaActual * conjuntosPorPagina;
   const indicePrimero = indiceUltimo - conjuntosPorPagina;
   const conjuntosActuales = conjuntos.slice(indicePrimero, indiceUltimo);

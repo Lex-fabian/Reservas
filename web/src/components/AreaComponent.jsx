@@ -32,7 +32,6 @@ export default function AreaComponent() {
   const cargarAreas = async () => {
     setLoading(true);
     try {
-      // Cargar conjuntos y áreas desde la API
       const [conjuntosResponse, areasResponse] = await Promise.all([
         conjuntoService.obtenerTodos(),
         areaService.obtenerTodas()
@@ -66,11 +65,9 @@ export default function AreaComponent() {
   };
 
   const handleSubmit = async (formData) => {
-    // Cerrar modal inmediatamente
     cerrarModal();
     setNotificacionVisible(true);
     
-    // Procesar en segundo plano
     try {
       if (modoModal === 'crear') {
         await areaService.crear(formData);
@@ -119,21 +116,16 @@ export default function AreaComponent() {
     );
   }
 
-  // Filtrar áreas por búsqueda y conjunto
   const areasFiltradas = areas.filter(area => {
-    // Filtro de búsqueda (nombre del área)
     const terminoBusqueda = busqueda.toLowerCase();
     const nombreArea = (area.nombre_area || area.nombre || '').toLowerCase();
     const cumpleBusqueda = nombreArea.includes(terminoBusqueda);
-    
-    // Filtro de conjunto
     const idConjunto = area.Conjunto?.id || area.conjunto_id;
     const cumpleConjunto = !conjuntoFiltro || idConjunto?.toString() === conjuntoFiltro;
     
     return cumpleBusqueda && cumpleConjunto;
   });
 
-  // Calcular áreas para la página actual
   const indiceUltimo = paginaActual * areasPorPagina;
   const indicePrimero = indiceUltimo - areasPorPagina;
   const areasActuales = areasFiltradas.slice(indicePrimero, indiceUltimo);

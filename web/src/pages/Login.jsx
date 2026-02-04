@@ -1,63 +1,25 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { authService } from '../services/api';
+import { useAuth } from '../hooks/useAuth';
+import PasswordInput from '../components/PasswordInput';
 import ModalCambioPasswordObligatorio from '../components/ModalCambioPasswordObligatorio';
 import '../style/login.css';
 
 export default function Login() {
-  const navigate = useNavigate();
   const [usuario, setUsuario] = useState('');
   const [contraseña, setContraseña] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [mostrarPassword, setMostrarPassword] = useState(false);
   const [modalCambioPasswordAbierto, setModalCambioPasswordAbierto] = useState(false);
+  
+  const { login, loading, error, handlePasswordChangeSuccess } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
 
-    if (!usuario || !contraseña) {
-      setError('Por favor completa todos los campos');
-      return;
-    }
-
-    setLoading(true);
-    
-    try {
-      const response = await authService.login(usuario, contraseña);
-      
-      // Verificar si debe cambiar contraseña
-      if (response.debe_cambiar_password) {
-        setModalCambioPasswordAbierto(true);
-        setLoading(false);
-        return;
-      }
-      
-      // Check role strictly before navigating
-      if (authService.isAdminOrSuper()) {
-        navigate('/inicio');
-      } else {
-        // Not authorized
-        authService.logout();
-        setError('Acceso denegado. Solo administradores pueden acceder.');
-      }
-    } catch (error) {
-      setError(error.response?.data?.mensaje || 'Error al iniciar sesión');
-    } finally {
-      setLoading(false);
-    }
+    await login(usuario, contraseña, () => setModalCambioPasswordAbierto(true));
   };
 
-  const handleCambioPasswordExitoso = () => {
+  const onCambioPasswordExitoso = () => {
     setModalCambioPasswordAbierto(false);
-    // Redirigir a inicio después de cambiar contraseña
-    if (authService.isAdminOrSuper()) {
-      navigate('/inicio');
-    } else {
-      authService.logout();
-      setError('Acceso denegado. Solo administradores pueden acceder.');
-    }
+    handlePasswordChangeSuccess();
   };
 
   return (
@@ -84,24 +46,11 @@ export default function Login() {
             required
           />
 
-          <div className="contenedor-password">
-            <input
-              type={mostrarPassword ? "text" : "password"}
-              placeholder="Contraseña"
-              value={contraseña}
-              onChange={(e) => setContraseña(e.target.value)}
-              disabled={loading}
-              required
-            />
-            <button
-              type="button"
-              className="boton-ojo"
-              onClick={() => setMostrarPassword(!mostrarPassword)}
-              disabled={loading}
-            >
-              {mostrarPassword ? '👁️' : '👁️‍🗨️'}
-            </button>
-          </div>
+          <PasswordInput
+            value={contraseña}
+            onChange={(e) => setContraseña(e.target.value)}
+            disabled={loading}
+          />
 
           <button type="submit" className="boton-primario" disabled={loading}>
             {loading ? 'Ingresando...' : 'Entrar'}
@@ -112,7 +61,7 @@ export default function Login() {
       <ModalCambioPasswordObligatorio
         isOpen={modalCambioPasswordAbierto}
         onClose={() => {}}
-        onCambioExitoso={handleCambioPasswordExitoso}
+        onCambioExitoso={onCambioPasswordExitoso}
       />
     </div>
   );

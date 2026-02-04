@@ -33,7 +33,6 @@ export default function ModalCambioPasswordObligatorio({ isOpen, onClose, onCamb
     e.preventDefault();
     setError('');
 
-    // Validaciones
     if (!formData.contraseñaActual || !formData.contraseñaNueva || !formData.confirmarContraseña) {
       setError('Todos los campos son obligatorios');
       return;
@@ -58,7 +57,6 @@ export default function ModalCambioPasswordObligatorio({ isOpen, onClose, onCamb
     setCargando(true);
 
     try {
-      // Llamar al endpoint de cambio de contraseña obligatoria
       const response = await fetch('/api/usuarios/cambiar-password-obligatoria', {
         method: 'POST',
         headers: {

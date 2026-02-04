@@ -50,28 +50,22 @@ export default function ModalArea({ isOpen, onClose, onSubmit, area = null, modo
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validar tipo de archivo
       if (!file.type.startsWith('image/')) {
         alert('Por favor selecciona un archivo de imagen válido');
         return;
       }
 
-      // Validar tamaño (máximo 5MB)
       if (file.size > 5 * 1024 * 1024) {
         alert('La imagen es muy grande. Máximo 5MB');
         return;
       }
 
-      // Comprimir y convertir a base64
       const reader = new FileReader();
       reader.onload = (event) => {
         const img = new Image();
         img.onload = () => {
-          // Crear canvas para comprimir
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
-          
-          // Redimensionar si es muy grande
           let width = img.width;
           let height = img.height;
           const maxDimension = 1200;
@@ -89,8 +83,6 @@ export default function ModalArea({ isOpen, onClose, onSubmit, area = null, modo
           canvas.width = width;
           canvas.height = height;
           ctx.drawImage(img, 0, 0, width, height);
-          
-          // Convertir a base64 con compresión
           const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
           
           setFormData(prev => ({
@@ -115,8 +107,6 @@ export default function ModalArea({ isOpen, onClose, onSubmit, area = null, modo
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    // Enviar formData directamente (fotos ya está en base64)
     onSubmit(formData);
   };
 
