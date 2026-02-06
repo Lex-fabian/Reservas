@@ -148,9 +148,9 @@ const enviarNotificacionReservaCreada = async (reserva, usuario, area, administr
         <p>Se ha creado una nueva reserva que requiere tu confirmación:</p>
         
         <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
-          <p style="margin: 8px 0;"><strong>Área:</strong> ${area.nombre_area}</p>
-          <p style="margin: 8px 0;"><strong>Usuario:</strong> ${usuario.nombre} ${usuario.apellido || ''}</p>
-          <p style="margin: 8px 0;"><strong>Email:</strong> ${usuario.email}</p>
+          <p style="margin: 8px 0;"><strong>Área:</strong> ${area.nombre_area || 'No especificado'}</p>
+          <p style="margin: 8px 0;"><strong>Usuario:</strong> ${usuario.nombre || ''} ${usuario.apellido || ''}</p>
+          <p style="margin: 8px 0;"><strong>Email:</strong> ${usuario.email || 'No disponible'}</p>
           <p style="margin: 8px 0;"><strong>Fecha:</strong> ${fecha}</p>
           <p style="margin: 8px 0;"><strong>Hora:</strong> ${reserva.hora_inicio} - ${reserva.hora_fin}</p>
           <p style="margin: 8px 0;"><strong>Personas:</strong> ${reserva.personas}</p>
@@ -206,11 +206,11 @@ const enviarNotificacionReservaConfirmada = async (reserva, usuario, area) => {
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
         <h2 style="color: #4CAF50; text-align: center;">✅ Reserva Confirmada</h2>
-        <p>Hola ${usuario.nombre},</p>
+        <p>Hola ${usuario.nombre || 'Usuario'},</p>
         <p>¡Buenas noticias! Tu reserva ha sido <strong>confirmada</strong>.</p>
         
         <div style="background-color: #e8f5e9; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #4CAF50;">
-          <p style="margin: 8px 0;"><strong>Área:</strong> ${area.nombre_area}</p>
+          <p style="margin: 8px 0;"><strong>Área:</strong> ${area.nombre_area || 'No especificado'}</p>
           <p style="margin: 8px 0;"><strong>Fecha:</strong> ${fecha}</p>
           <p style="margin: 8px 0;"><strong>Hora:</strong> ${reserva.hora_inicio} - ${reserva.hora_fin}</p>
           <p style="margin: 8px 0;"><strong>Personas:</strong> ${reserva.personas}</p>
@@ -265,11 +265,11 @@ const enviarNotificacionReservaCancelada = async (reserva, usuario, area, motivo
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
         <h2 style="color: #f44336; text-align: center;">❌ Reserva Cancelada</h2>
-        <p>Hola ${usuario.nombre},</p>
+        <p>Hola ${usuario.nombre || 'Usuario'},</p>
         <p>Tu reserva ha sido <strong>cancelada</strong>.</p>
         
         <div style="background-color: #ffebee; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #f44336;">
-          <p style="margin: 8px 0;"><strong>Área:</strong> ${area.nombre_area}</p>
+          <p style="margin: 8px 0;"><strong>Área:</strong> ${area.nombre_area || 'No especificado'}</p>
           <p style="margin: 8px 0;"><strong>Fecha:</strong> ${fecha}</p>
           <p style="margin: 8px 0;"><strong>Hora:</strong> ${reserva.hora_inicio} - ${reserva.hora_fin}</p>
           ${motivo ? `<p style="margin: 8px 0;"><strong>Motivo:</strong> ${motivo}</p>` : ''}

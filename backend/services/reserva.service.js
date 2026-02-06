@@ -89,10 +89,13 @@ class ReservaService {
     // ENVIAR NOTIFICACIÓN A ADMINISTRADORES
     try {
       const area = await Area.findByPk(areaId);
+      const usuarioCompleto = await Usuario.findByPk(usuario.id, {
+        attributes: ['id', 'nombre', 'apellido', 'email', 'telefono']
+      });
       const administradores = await this.obtenerAdministradoresDeConjunto(conjuntoId);
       
-      if (area && administradores.length > 0) {
-        await enviarNotificacionReservaCreada(reserva, usuario, area, administradores);
+      if (area && usuarioCompleto && administradores.length > 0) {
+        await enviarNotificacionReservaCreada(reserva, usuarioCompleto, area, administradores);
       }
     } catch (emailError) {
       console.error('Error enviando notificación:', emailError);
@@ -233,8 +236,14 @@ class ReservaService {
   async confirmar(id) {
     const reserva = await Reserva.findByPk(id, {
       include: [
-        { model: Usuario, as: 'Usuario' },
-        { model: Area, as: 'Area' }
+        { 
+          model: Usuario, 
+          attributes: ['id', 'nombre', 'apellido', 'email', 'telefono']
+        },
+        { 
+          model: Area, 
+          attributes: ['id', 'nombre_area', 'maximo_personas', 'conjuntoId']
+        }
       ]
     });
 
@@ -265,8 +274,14 @@ class ReservaService {
   async cancelar(id, usuario, motivo = '') {
     const reserva = await Reserva.findByPk(id, {
       include: [
-        { model: Usuario, as: 'Usuario' },
-        { model: Area, as: 'Area' }
+        { 
+          model: Usuario, 
+          attributes: ['id', 'nombre', 'apellido', 'email', 'telefono']
+        },
+        { 
+          model: Area, 
+          attributes: ['id', 'nombre_area', 'maximo_personas', 'conjuntoId']
+        }
       ]
     });
 
