@@ -385,6 +385,7 @@ export default function ReservaComponent() {
         mensaje={mensajeConfirmacion}
         onConfirmar={confirmarEliminacion}
         onCancelar={cancelarEliminacion}
+        textoConfirmar={accionConfirmacion === 'confirmar' ? 'Confirmar' : accionConfirmacion === 'rechazar' ? 'Rechazar' : 'Cancelar'}
       />
 
       <Notificacion
