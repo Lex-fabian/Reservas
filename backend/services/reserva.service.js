@@ -1,5 +1,10 @@
-const { Reserva, Usuario, Area } = require('../models');
+const { Reserva, Usuario, Area, Conjunto } = require('../models');
 const { Op } = require('sequelize');
+const { 
+  enviarNotificacionReservaCreada, 
+  enviarNotificacionReservaConfirmada, 
+  enviarNotificacionReservaCancelada 
+} = require('./email.service');
 
 class ReservaService {
   /**
@@ -33,6 +38,33 @@ class ReservaService {
   }
 
   /**
+   * OBTIENE ADMINISTRADORES DEL CONJUNTO (PARA NOTIFICACIONES)
+   */
+  async obtenerAdministradoresDeConjunto(conjuntoId) {
+    try {
+      const administradores = await Usuario.findAll({
+        include: [{
+          model: Conjunto,
+          as: 'conjuntos',
+          where: { id: conjuntoId },
+          attributes: [],
+          through: { attributes: [] }
+        }],
+        where: {
+          tipo_usuario: ['admin', 'superadmin'],
+          estado: 'activo'
+        },
+        attributes: ['id', 'nombre', 'apellido', 'email']
+      });
+
+      return administradores;
+    } catch (error) {
+      console.error(' Error obteniendo administradores:', error);
+      return [];
+    }
+  }
+
+  /**
    * CREA UNA NUEVA RESERVA
    */
   async crear(usuario, datos) {
@@ -53,6 +85,19 @@ class ReservaService {
       foto_comprobante,
       estado: 'pendiente'
     });
+
+    // ENVIAR NOTIFICACIÓN A ADMINISTRADORES
+    try {
+      const area = await Area.findByPk(areaId);
+      const administradores = await this.obtenerAdministradoresDeConjunto(conjuntoId);
+      
+      if (area && administradores.length > 0) {
+        await enviarNotificacionReservaCreada(reserva, usuario, area, administradores);
+      }
+    } catch (emailError) {
+      console.error('Error enviando notificación:', emailError);
+      // No fallar la reserva si falla el email
+    }
 
     return reserva;
   }
@@ -151,7 +196,7 @@ class ReservaService {
   }
 
   /**
-   * ACTUALIZA UNA RESERVA EXISTENTE CON VALIDACIÓN DE PERMISOS
+   * ACTUALIZA UNA RESERVA CON VALIDACIÓN DE PERMISOS
    */
   async actualizar(id, usuario, datos) {
     const reserva = await Reserva.findByPk(id);
@@ -186,7 +231,12 @@ class ReservaService {
    * CONFIRMA UNA RESERVA (SOLO ADMIN/SUPERADMIN)
    */
   async confirmar(id) {
-    const reserva = await Reserva.findByPk(id);
+    const reserva = await Reserva.findByPk(id, {
+      include: [
+        { model: Usuario, as: 'Usuario' },
+        { model: Area, as: 'Area' }
+      ]
+    });
 
     if (!reserva) {
       const error = new Error('Reserva no encontrada');
@@ -197,14 +247,28 @@ class ReservaService {
     reserva.estado = 'confirmada';
     await reserva.save();
 
+    // ENVIAR NOTIFICACIÓN AL USUARIO
+    try {
+      if (reserva.Usuario && reserva.Area) {
+        await enviarNotificacionReservaConfirmada(reserva, reserva.Usuario, reserva.Area);
+      }
+    } catch (emailError) {
+      console.error('Error enviando notificación:', emailError);
+    }
+
     return reserva;
   }
 
   /**
    * CANCELA UNA RESERVA CON VALIDACIÓN DE PERMISOS
    */
-  async cancelar(id, usuario) {
-    const reserva = await Reserva.findByPk(id);
+  async cancelar(id, usuario, motivo = '') {
+    const reserva = await Reserva.findByPk(id, {
+      include: [
+        { model: Usuario, as: 'Usuario' },
+        { model: Area, as: 'Area' }
+      ]
+    });
 
     if (!reserva) {
       const error = new Error('Reserva no encontrada');
@@ -215,7 +279,18 @@ class ReservaService {
     this.verificarPermisos(reserva, usuario);
 
     reserva.estado = 'cancelada';
+    reserva.cancelado_por = usuario.id;
+    reserva.motivo_cancelacion = motivo;
     await reserva.save();
+
+    // ENVIAR NOTIFICACIÓN AL USUARIO
+    try {
+      if (reserva.Usuario && reserva.Area) {
+        await enviarNotificacionReservaCancelada(reserva, reserva.Usuario, reserva.Area, motivo);
+      }
+    } catch (emailError) {
+      console.error('Error enviando notificación:', emailError);
+    }
 
     return reserva;
   }

@@ -123,7 +123,189 @@ const enviarCambioContraseña = async (email, usuario, nuevaContraseña) => {
   }
 };
 
+/**
+ * ENVÍA NOTIFICACIÓN CUANDO UN USUARIO CREA UNA RESERVA (A ADMINISTRADORES)
+ */
+const enviarNotificacionReservaCreada = async (reserva, usuario, area, administradores) => {
+  try {
+    if (!transporter) {
+      console.warn('⚠️ No hay servicio de email configurado');
+      return false;
+    }
+
+    const appUrl = process.env.APP_URL || 'https://reservas-web-mu.vercel.app';
+    const fecha = new Date(reserva.fecha_reserva).toLocaleDateString('es-ES', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+        <h2 style="color: #4a90e2; text-align: center;">🔔 Nueva Reserva Pendiente</h2>
+        <p>Hola,</p>
+        <p>Se ha creado una nueva reserva que requiere tu confirmación:</p>
+        
+        <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <p style="margin: 8px 0;"><strong>Área:</strong> ${area.nombre_area}</p>
+          <p style="margin: 8px 0;"><strong>Usuario:</strong> ${usuario.nombre} ${usuario.apellido || ''}</p>
+          <p style="margin: 8px 0;"><strong>Email:</strong> ${usuario.email}</p>
+          <p style="margin: 8px 0;"><strong>Fecha:</strong> ${fecha}</p>
+          <p style="margin: 8px 0;"><strong>Hora:</strong> ${reserva.hora_inicio} - ${reserva.hora_fin}</p>
+          <p style="margin: 8px 0;"><strong>Personas:</strong> ${reserva.personas}</p>
+          ${reserva.observaciones ? `<p style="margin: 8px 0;"><strong>Observaciones:</strong> ${reserva.observaciones}</p>` : ''}
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${appUrl}/reservas" style="display: inline-block; background: #4a90e2; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: 600;">Ver Reserva</a>
+        </div>
+        
+        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+        <p style="font-size: 12px; color: #888; text-align: center;">Este es un mensaje automático, por favor no respondas a este correo.</p>
+      </div>
+    `;
+
+    // Enviar a todos los administradores
+    for (const admin of administradores) {
+      await transporter.sendMail({
+        from: process.env.EMAIL_FROM || '"ReservasApp" <noreply@reservasapp.com>',
+        to: admin.email,
+        subject: `Nueva Reserva - ${area.nombre_area}`,
+        html: htmlContent
+      });
+    }
+    
+    console.log(` Notificación de nueva reserva enviada a ${administradores.length} administrador(es)`);
+    return true;
+
+  } catch (error) {
+    console.error(' Error al enviar notificación de reserva creada:', error);
+    return false;
+  }
+};
+
+/**
+ * ENVÍA NOTIFICACIÓN CUANDO UN ADMIN CONFIRMA UNA RESERVA (AL USUARIO)
+ */
+const enviarNotificacionReservaConfirmada = async (reserva, usuario, area) => {
+  try {
+    if (!transporter) {
+      console.warn('⚠️ No hay servicio de email configurado');
+      return false;
+    }
+
+    const appUrl = process.env.APP_URL || 'https://reservas-web-mu.vercel.app';
+    const fecha = new Date(reserva.fecha_reserva).toLocaleDateString('es-ES', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+        <h2 style="color: #4CAF50; text-align: center;">✅ Reserva Confirmada</h2>
+        <p>Hola ${usuario.nombre},</p>
+        <p>¡Buenas noticias! Tu reserva ha sido <strong>confirmada</strong>.</p>
+        
+        <div style="background-color: #e8f5e9; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #4CAF50;">
+          <p style="margin: 8px 0;"><strong>Área:</strong> ${area.nombre_area}</p>
+          <p style="margin: 8px 0;"><strong>Fecha:</strong> ${fecha}</p>
+          <p style="margin: 8px 0;"><strong>Hora:</strong> ${reserva.hora_inicio} - ${reserva.hora_fin}</p>
+          <p style="margin: 8px 0;"><strong>Personas:</strong> ${reserva.personas}</p>
+          ${reserva.observaciones ? `<p style="margin: 8px 0;"><strong>Observaciones:</strong> ${reserva.observaciones}</p>` : ''}
+        </div>
+
+        <p style="color: #555;">Recuerda llegar puntual y seguir las normas del área.</p>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${appUrl}/mis-reservas" style="display: inline-block; background: #4CAF50; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: 600;">Ver Mis Reservas</a>
+        </div>
+        
+        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+        <p style="font-size: 12px; color: #888; text-align: center;">Este es un mensaje automático, por favor no respondas a este correo.</p>
+      </div>
+    `;
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_FROM || '"ReservasApp" <noreply@reservasapp.com>',
+      to: usuario.email,
+      subject: `Reserva Confirmada - ${area.nombre_area}`,
+      html: htmlContent
+    });
+    
+    console.log(` Notificación de confirmación enviada a: ${usuario.email}`);
+    return true;
+
+  } catch (error) {
+    console.error(' Error al enviar notificación de reserva confirmada:', error);
+    return false;
+  }
+};
+
+/**
+ * ENVÍA NOTIFICACIÓN CUANDO SE CANCELA UNA RESERVA (AL USUARIO)
+ */
+const enviarNotificacionReservaCancelada = async (reserva, usuario, area, motivo = '') => {
+  try {
+    if (!transporter) {
+      console.warn('⚠️ No hay servicio de email configurado');
+      return false;
+    }
+
+    const appUrl = process.env.APP_URL || 'https://reservas-web-mu.vercel.app';
+    const fecha = new Date(reserva.fecha_reserva).toLocaleDateString('es-ES', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+        <h2 style="color: #f44336; text-align: center;">❌ Reserva Cancelada</h2>
+        <p>Hola ${usuario.nombre},</p>
+        <p>Tu reserva ha sido <strong>cancelada</strong>.</p>
+        
+        <div style="background-color: #ffebee; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #f44336;">
+          <p style="margin: 8px 0;"><strong>Área:</strong> ${area.nombre_area}</p>
+          <p style="margin: 8px 0;"><strong>Fecha:</strong> ${fecha}</p>
+          <p style="margin: 8px 0;"><strong>Hora:</strong> ${reserva.hora_inicio} - ${reserva.hora_fin}</p>
+          ${motivo ? `<p style="margin: 8px 0;"><strong>Motivo:</strong> ${motivo}</p>` : ''}
+        </div>
+
+        <p style="color: #555;">Puedes realizar una nueva reserva cuando lo desees.</p>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${appUrl}/reservas" style="display: inline-block; background: #4a90e2; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: 600;">Hacer Nueva Reserva</a>
+        </div>
+        
+        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+        <p style="font-size: 12px; color: #888; text-align: center;">Este es un mensaje automático, por favor no respondas a este correo.</p>
+      </div>
+    `;
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_FROM || '"ReservasApp" <noreply@reservasapp.com>',
+      to: usuario.email,
+      subject: `Reserva Cancelada - ${area.nombre_area}`,
+      html: htmlContent
+    });
+    
+    console.log(` Notificación de cancelación enviada a: ${usuario.email}`);
+    return true;
+
+  } catch (error) {
+    console.error(' Error al enviar notificación de reserva cancelada:', error);
+    return false;
+  }
+};
+
 module.exports = {
   enviarCredenciales,
-  enviarCambioContraseña
+  enviarCambioContraseña,
+  enviarNotificacionReservaCreada,
+  enviarNotificacionReservaConfirmada,
+  enviarNotificacionReservaCancelada,
 };

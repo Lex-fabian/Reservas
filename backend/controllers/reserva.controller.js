@@ -72,7 +72,8 @@ const reservaController = {
 
   async cancelar(req, res) {
     try {
-      const reserva = await reservaService.cancelar(req.params.id, req.usuario);
+      const { motivo } = req.body;
+      const reserva = await reservaService.cancelar(req.params.id, req.usuario, motivo);
 
       res.json({
         message: 'Reserva cancelada exitosamente',

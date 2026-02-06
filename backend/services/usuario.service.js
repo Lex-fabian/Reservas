@@ -1,29 +1,13 @@
 const { Usuario, Reserva, Conjunto } = require('../models');
 const { enviarCredenciales, enviarCambioContraseña } = require('./email.service');
+const { generarPasswordSeguro, validarPasswordSeguro } = require('../validators/password.validator');
 
 class UsuarioService {
   /**
-   * GENERA UNA CONTRASEÑA TEMPORAL
+   * GENERA UNA CONTRASEÑA TEMPORAL SEGURA
    */
   generarContraseñaTemporal() {
-    const longitud = 12;
-    const mayusculas = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const minusculas = 'abcdefghijklmnopqrstuvwxyz';
-    const numeros = '0123456789';
-    const especiales = '@#$%&*';
-    const todos = mayusculas + minusculas + numeros + especiales;
-    
-    let contraseña = '';
-    contraseña += mayusculas[Math.floor(Math.random() * mayusculas.length)];
-    contraseña += minusculas[Math.floor(Math.random() * minusculas.length)];
-    contraseña += numeros[Math.floor(Math.random() * numeros.length)];
-    contraseña += especiales[Math.floor(Math.random() * especiales.length)];
-    
-    for (let i = contraseña.length; i < longitud; i++) {
-      contraseña += todos[Math.floor(Math.random() * todos.length)];
-    }
-    
-    return contraseña.split('').sort(() => Math.random() - 0.5).join('');
+    return generarPasswordSeguro(12);
   }
 
   validarPermisoCrearRol(usuarioActual, tipo_usuario) {
@@ -342,14 +326,10 @@ class UsuarioService {
   }
 
   async cambiarPasswordObligatoria(usuarioId, contraseñaActual, contraseñaNueva) {
-    if (!contraseñaActual || !contraseñaNueva) {
-      const error = new Error('Se requieren ambas contraseñas');
-      error.statusCode = 400;
-      throw error;
-    }
-
-    if (contraseñaNueva.length < 6) {
-      const error = new Error('La contraseña debe tener al menos 6 caracteres');
+    // Validar que la nueva contraseña sea segura
+    const validacion = validarPasswordSeguro(contraseñaNueva);
+    if (!validacion.valido) {
+      const error = new Error(validacion.errores.join('. '));
       error.statusCode = 400;
       throw error;
     }

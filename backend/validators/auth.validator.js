@@ -1,4 +1,5 @@
 const { body } = require('express-validator');
+const { validarPasswordSeguro } = require('./password.validator');
 
 const registerValidation = [
   body('nombre')
@@ -26,8 +27,13 @@ const registerValidation = [
   body('contraseña')
     .trim()
     .notEmpty().withMessage('La contraseña es requerida')
-    .isLength({ min: 6 }).withMessage('La contraseña debe tener al menos 6 caracteres')
-    .matches(/\d/).withMessage('La contraseña debe contener al menos un número'),
+    .custom((value) => {
+      const validacion = validarPasswordSeguro(value);
+      if (!validacion.valido) {
+        throw new Error(validacion.errores.join('. '));
+      }
+      return true;
+    }),
     
   body('telefono')
     .optional()
