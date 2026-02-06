@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { authService, usuarioService } from '../services/api';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faKey, faUser, faEnvelope, faPhone, faIdCard } from '@fortawesome/free-solid-svg-icons';
+import PasswordValidator from '../components/PasswordValidator';
 import '../style/Perfil.css';
 
 export default function PerfilComponent() {
@@ -12,6 +13,7 @@ export default function PerfilComponent() {
   const [mensaje, setMensaje] = useState('');
   const [error, setError] = useState('');
   const [cargando, setCargando] = useState(false);
+  const [passwordValido, setPasswordValido] = useState(false);
 
   const handleCambiarContraseña = async (e) => {
     e.preventDefault();
@@ -24,13 +26,13 @@ export default function PerfilComponent() {
       return;
     }
 
-    if (contraseñaNueva !== confirmarContraseña) {
-      setError('Las contraseñas nuevas no coinciden');
+    if (!passwordValido) {
+      setError('La contraseña no cumple con los requisitos de seguridad');
       return;
     }
 
-    if (contraseñaNueva.length < 3) {
-      setError('La contraseña debe tener al menos 3 caracteres');
+    if (contraseñaNueva !== confirmarContraseña) {
+      setError('Las contraseñas nuevas no coinciden');
       return;
     }
 
@@ -152,10 +154,15 @@ export default function PerfilComponent() {
               />
             </div>
 
+            <PasswordValidator 
+              password={contraseñaNueva} 
+              onValidChange={setPasswordValido}
+            />
+
             <button 
               type="submit" 
               className="perfil-btn-cambiar"
-              disabled={cargando}
+              disabled={cargando || !passwordValido}
             >
               {cargando ? 'Cambiando...' : 'Cambiar Contraseña'}
             </button>

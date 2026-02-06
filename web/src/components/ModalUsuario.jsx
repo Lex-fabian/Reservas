@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import PasswordValidator from './PasswordValidator';
 import './ModalUsuario.css';
 
 export default function ModalUsuario({ isOpen, onClose, onSubmit, usuario = null, modo = 'crear', conjuntos = [], currentUser = null }) {
@@ -14,6 +15,7 @@ export default function ModalUsuario({ isOpen, onClose, onSubmit, usuario = null
     estado: 'activo',
     conjuntos: []
   });
+  const [passwordValido, setPasswordValido] = useState(false);
 
   useEffect(() => {
     if (usuario && modo === 'editar') {
@@ -74,6 +76,11 @@ export default function ModalUsuario({ isOpen, onClose, onSubmit, usuario = null
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Si estamos en modo editar y hay contraseña, validarla
+    if (modo === 'editar' && formData.contraseña && !passwordValido) {
+      return;
+    }
     
     if (modo === 'editar' && !formData.contraseña) {
       const { contraseña, ...dataParaActualizar } = formData;
@@ -172,18 +179,27 @@ export default function ModalUsuario({ isOpen, onClose, onSubmit, usuario = null
 
           {/* Solo mostrar campo contraseña en modo EDITAR */}
           {modo === 'editar' && (
-            <div className="form-grupo">
-              <label htmlFor="contraseña">
-                Contraseña (dejar vacío para mantener)
-              </label>
-              <input
-                type="password"
-                id="contraseña"
-                name="contraseña"
-                value={formData.contraseña}
-                onChange={handleChange}
-              />
-            </div>
+            <>
+              <div className="form-grupo">
+                <label htmlFor="contraseña">
+                  Contraseña (dejar vacío para mantener)
+                </label>
+                <input
+                  type="password"
+                  id="contraseña"
+                  name="contraseña"
+                  value={formData.contraseña}
+                  onChange={handleChange}
+                />
+              </div>
+              
+              {formData.contraseña && (
+                <PasswordValidator 
+                  password={formData.contraseña} 
+                  onValidChange={setPasswordValido}
+                />
+              )}
+            </>
           )}
 
           {/* Mensaje informativo en modo CREAR */}

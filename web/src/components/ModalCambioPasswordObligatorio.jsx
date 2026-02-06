@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import PasswordValidator from './PasswordValidator';
 import './ModalCambioPasswordObligatorio.css';
 
 export default function ModalCambioPasswordObligatorio({ isOpen, onClose, onCambioExitoso }) {
@@ -12,6 +13,7 @@ export default function ModalCambioPasswordObligatorio({ isOpen, onClose, onCamb
   const [mostrarActual, setMostrarActual] = useState(false);
   const [mostrarNueva, setMostrarNueva] = useState(false);
   const [mostrarConfirmar, setMostrarConfirmar] = useState(false);
+  const [passwordValido, setPasswordValido] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -20,13 +22,6 @@ export default function ModalCambioPasswordObligatorio({ isOpen, onClose, onCamb
       [name]: value
     }));
     setError('');
-  };
-
-  const validarPassword = (password) => {
-    if (password.length < 6) {
-      return 'La contraseña debe tener al menos 6 caracteres';
-    }
-    return null;
   };
 
   const handleSubmit = async (e) => {
@@ -38,9 +33,8 @@ export default function ModalCambioPasswordObligatorio({ isOpen, onClose, onCamb
       return;
     }
 
-    const errorValidacion = validarPassword(formData.contraseñaNueva);
-    if (errorValidacion) {
-      setError(errorValidacion);
+    if (!passwordValido) {
+      setError('La contraseña no cumple con los requisitos de seguridad');
       return;
     }
 
@@ -182,22 +176,15 @@ export default function ModalCambioPasswordObligatorio({ isOpen, onClose, onCamb
               </div>
             </div>
 
-            <div className="requisitos-password">
-              <p className="requisitos-titulo">Requisitos de la contraseña:</p>
-              <ul>
-                <li className={formData.contraseñaNueva.length >= 6 ? 'cumplido' : ''}>
-                  Mínimo 6 caracteres
-                </li>
-                <li className={formData.contraseñaNueva === formData.confirmarContraseña && formData.contraseñaNueva ? 'cumplido' : ''}>
-                  Las contraseñas coinciden
-                </li>
-              </ul>
-            </div>
+            <PasswordValidator 
+              password={formData.contraseñaNueva} 
+              onValidChange={setPasswordValido}
+            />
 
             <button
               type="submit"
               className="boton-cambiar-password"
-              disabled={cargando}
+              disabled={cargando || !passwordValido}
             >
               {cargando ? 'Cambiando...' : 'Cambiar Contraseña'}
             </button>
