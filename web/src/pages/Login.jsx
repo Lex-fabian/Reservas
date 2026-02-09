@@ -10,6 +10,7 @@ import registrarImg from '../assets/registrar.jpeg';
 import superadminImg from '../assets/superadmin.jpeg';
 import '../style/login.css';
 
+// Página de inicio con navegación y sección promocional
 export default function Login() {
   const [usuario, setUsuario] = useState('');
   const [contraseña, setContraseña] = useState('');
