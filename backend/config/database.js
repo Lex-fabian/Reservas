@@ -24,26 +24,41 @@ const sequelize = new Sequelize(
       idle: 10000
     },
     dialectOptions: {
+      connectTimeout: 30000, // 30 segundos
       ssl: process.env.DB_SSL === 'true' ? {
         require: true,
         rejectUnauthorized: false
       } : false
+    },
+    retry: {
+      max: 3 
     }
   }
 );
 
-const connectDB = async () => {
-  try {
-    await sequelize.authenticate();
-    console.log('Conexión a MySQL establecida correctamente');
-    await sequelize.sync({ alter: false });
-    console.log('Modelos sincronizados con la base de datos');
-  } catch (error) {
-    console.error(' Error conectando a la base de datos:');
-    console.error('Mensaje:', error.message);
-    console.error('Código:', error.code);
-    console.error('Error completo:', error);
-    process.exit(1);
+const connectDB = async (intentos = 3, delay = 5000) => {
+  for (let i = 1; i <= intentos; i++) {
+    try {
+      console.log(`Intento ${i} de ${intentos}: Conectando a la base de datos...`);
+      await sequelize.authenticate();
+      console.log(' Conexión a MySQL establecida correctamente');
+      await sequelize.sync({ alter: false });
+      console.log(' Modelos sincronizados con la base de datos');
+      return; 
+    } catch (error) {
+      console.error(` Error en intento ${i}/${intentos}:`);
+      console.error('Mensaje:', error.message);
+      console.error('Código:', error.code);
+      
+      if (i === intentos) {
+        console.error(' Error conectando a la base de datos después de', intentos, 'intentos');
+        console.error('Error completo:', error);
+        process.exit(1);
+      }
+      
+      console.log(` Esperando ${delay / 1000} segundos antes del próximo intento...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
   }
 };
 
