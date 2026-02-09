@@ -31,9 +31,28 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Error de autenticación
     if (error.response?.status === 401) {
       storageService.clearAuth();
       window.location.href = '/login';
+    }
+    
+    // Timeout o error de red
+    if (error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK' || !error.response) {
+      return Promise.reject({
+        message: '⚠️ El sistema no está disponible en este momento. Por favor, intenta nuevamente en unos minutos.',
+        status: 503,
+        isNetworkError: true
+      });
+    }
+    
+    // Error del servidor (500+)
+    if (error.response?.status >= 500) {
+      return Promise.reject({
+        message: '⚠️ El servidor está experimentando problemas. Por favor, intenta nuevamente en unos minutos.',
+        status: error.response.status,
+        isServerError: true
+      });
     }
     
     const errorMessage = error.response?.data?.error 
