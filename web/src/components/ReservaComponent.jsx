@@ -62,7 +62,7 @@ export default function ReservaComponent() {
   const cargarAreas = async (conjuntoId) => {
     try {
       const areasRes = await areaService.obtenerPorConjunto(conjuntoId);
-      setAreas(areasRes);
+      setAreas(areasRes.areas || []);
     } catch (error) {
       console.error('Error al cargar áreas:', error);
     }
