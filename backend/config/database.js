@@ -35,6 +35,7 @@ const sequelize = new Sequelize(
     }
   }
 );
+// FUNCION PARA CONECTAR A LA BASE DE DATOS CON REINTENTOS Y LOGGING DETALLADO
 
 const connectDB = async (intentos = 3, delay = 5000) => {
   for (let i = 1; i <= intentos; i++) {
