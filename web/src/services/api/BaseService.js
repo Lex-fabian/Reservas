@@ -39,12 +39,19 @@ export class BaseService {
 
   async customRequest(method, endpoint, data = null, config = {}) {
     const url = `/${this.resource}${endpoint}`;
-    const response = await api.request({
+    const requestConfig = {
       method,
       url,
-      data,
       ...config
-    });
+    };
+
+    // Avoid sending literal JSON null for body-less requests (e.g. PATCH confirmar)
+    // because strict JSON parsers may reject primitive payloads.
+    if (data !== null && data !== undefined) {
+      requestConfig.data = data;
+    }
+
+    const response = await api.request(requestConfig);
     return response.data;
   }
 }

@@ -82,6 +82,13 @@ app.use('/uploads', (req, res, next) => {
 }, express.static(path.join(__dirname, 'public/uploads')));
 
 app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(400).json({
+      error: 'JSON inválido en el cuerpo de la solicitud',
+      message: 'Verifica el formato del body y vuelve a intentarlo'
+    });
+  }
+
   console.error(err.stack);
   res.status(500).json({ 
     error: 'Error del servidor',
