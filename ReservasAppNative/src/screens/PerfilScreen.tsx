@@ -146,7 +146,7 @@ export default function PerfilScreen({ navigation }: Props) {
             icon="help-circle-outline"
             title="Ayuda"
             onPress={() => {
-              const phoneNumber = '+593969528311';
+              const phoneNumber = '+593999999999';
               const url = `whatsapp://send?phone=${phoneNumber}`;
               Linking.openURL(url).catch(() => {
                 Alert.alert('Error', 'No se pudo abrir WhatsApp. Asegúrate de tenerlo instalado.');

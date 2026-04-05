@@ -252,7 +252,7 @@ export default function ChatFlotante() {
   };
 
   const contactarWhatsApp = () => {
-    const phoneNumber = '+593969528311';
+    const phoneNumber = '+593999999999';
     const url = `whatsapp://send?phone=${phoneNumber}`;
     Linking.openURL(url).catch(() => {
       const webUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}`;

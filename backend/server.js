@@ -22,10 +22,10 @@ const allowedOrigins = [
   'http://127.0.0.1:5173',
   'http://localhost:3000',
   'http://127.0.0.1:3000',
-  'http://192.168.1.108:5173',
-  'http://192.168.1.108:8081',
-  'http://192.168.1.108:3000',
-  'https://reservas-rust.vercel.app'
+  'http://192.168.0.100:5173',
+  'http://192.168.0.100:8081',
+  'http://192.168.0.100:3000',
+  'https://web-ejemplo.vercel.app'
 ];
 
 app.use(cors({

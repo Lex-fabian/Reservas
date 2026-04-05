@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './AuditoriaComponent.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://192.168.1.108:10000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000/api';
 
 const AuditoriaComponent = () => {
   const [logs, setLogs] = useState([]);

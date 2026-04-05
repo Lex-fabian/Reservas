@@ -20,7 +20,7 @@ import type {
   CambioPasswordFormData,
 } from '../types';
 
-const API_URL = 'https://reservas-725o.onrender.com/api';
+const API_URL = 'https://api-ejemplo.onrender.com/api';
 
 const api: AxiosInstance = axios.create({
   baseURL: API_URL,
