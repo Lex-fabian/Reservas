@@ -251,7 +251,7 @@ export default function Login() {
             ¿Tienes alguna pregunta? Escríbenos por WhatsApp
           </p>
           <a 
-            href="https://wa.me/5930969528311" 
+            href="https://wa.me/593999999999" 
             target="_blank"
             rel="noopener noreferrer"
             className="boton-whatsapp"

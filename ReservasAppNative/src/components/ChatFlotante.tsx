@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
+import { APP_CONFIG } from '../config/appConfig';
 import { areaService } from '../services/api';
 
 interface Mensaje {
@@ -252,7 +253,7 @@ export default function ChatFlotante() {
   };
 
   const contactarWhatsApp = () => {
-    const phoneNumber = '+593969528311';
+    const phoneNumber = APP_CONFIG.SUPPORT_WHATSAPP_NUMBER;
     const url = `whatsapp://send?phone=${phoneNumber}`;
     Linking.openURL(url).catch(() => {
       const webUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}`;

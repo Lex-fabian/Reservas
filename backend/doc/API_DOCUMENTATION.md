@@ -599,7 +599,7 @@ GET /api/auditoria?accion=crear&entidad=reserva&fechaDesde=2026-02-01&page=1&lim
       "accion": "crear",
       "entidad": "reserva",
       "descripcion": "Juan Perez creo reserva del 15/02/2026 18:00 al 15/02/2026 22:00",
-      "ip": "192.168.1.100",
+      "ip": "192.168.0.100",
       "createdAt": "2026-02-04T15:30:45.000Z",
       "Usuario": {
         "id": 1,

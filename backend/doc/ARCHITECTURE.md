@@ -517,7 +517,7 @@ class AreaService {
         descripcion: '...',
         datosAnteriores: { ... },
         datosNuevos: { ... },
-        ip: '192.168.1.100',
+        ip: '192.168.0.100',
         userAgent: 'Mozilla/5.0...'
       })
 
@@ -678,7 +678,7 @@ async obtenerTodas(usuario, filtros) {
   descripcion: 'JUAN PEREZ ACTUALIZO AREA PISCINA: ...',
   datosAnteriores: '{"maximo_personas":20,"costo":50000}',
   datosNuevos: '{"maximo_personas":25,"costo":60000}',
-  ip: '192.168.1.100',
+  ip: '192.168.0.100',
   userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)...',
   createdAt: '2026-02-04T15:30:45.000Z'
 }

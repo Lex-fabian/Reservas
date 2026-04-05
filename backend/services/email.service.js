@@ -31,7 +31,7 @@ const enviarCredenciales = async (email, usuario, contraseña) => {
       return false;
     }
 
-    const appUrl = process.env.APP_URL || 'https://reservas-web-mu.vercel.app';
+    const appUrl = process.env.APP_URL || 'https://web-ejemplo.vercel.app';
     
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
@@ -81,7 +81,7 @@ const enviarCambioContraseña = async (email, usuario, nuevaContraseña) => {
       return false;
     }
 
-    const appUrl = process.env.APP_URL || 'https://reservas-web-mu.vercel.app';
+    const appUrl = process.env.APP_URL || 'https://web-ejemplo.vercel.app';
     
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
@@ -133,7 +133,7 @@ const enviarNotificacionReservaCreada = async (reserva, usuario, area, administr
       return false;
     }
 
-    const appUrl = process.env.APP_URL || 'https://reservas-web-mu.vercel.app';
+    const appUrl = process.env.APP_URL || 'https://web-ejemplo.vercel.app';
     const fecha = new Date(reserva.fecha_reserva).toLocaleDateString('es-ES', { 
       weekday: 'long', 
       year: 'numeric', 
@@ -195,7 +195,7 @@ const enviarNotificacionReservaConfirmada = async (reserva, usuario, area) => {
       return false;
     }
 
-    const appUrl = process.env.APP_URL || 'https://reservas-web-mu.vercel.app';
+    const appUrl = process.env.APP_URL || 'https://web-ejemplo.vercel.app';
     const fecha = new Date(reserva.fecha_reserva).toLocaleDateString('es-ES', { 
       weekday: 'long', 
       year: 'numeric', 
@@ -254,7 +254,7 @@ const enviarNotificacionReservaCancelada = async (reserva, usuario, area, motivo
       return false;
     }
 
-    const appUrl = process.env.APP_URL || 'https://reservas-web-mu.vercel.app';
+    const appUrl = process.env.APP_URL || 'https://web-ejemplo.vercel.app';
     const fecha = new Date(reserva.fecha_reserva).toLocaleDateString('es-ES', { 
       weekday: 'long', 
       year: 'numeric', 

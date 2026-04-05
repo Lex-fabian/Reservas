@@ -236,7 +236,7 @@ Guarda un registro de todas las acciones importantes.
 **Ejemplo:**
 ```sql
 INSERT INTO auditoria_logs (usuarioId, accion, entidad, entidadId, descripcion, ip)
-VALUES (1, 'crear', 'reserva', 10, 'Juan Perez creo reserva de Piscina', '192.168.1.100');
+VALUES (1, 'crear', 'reserva', 10, 'Juan Perez creo reserva de Piscina', '192.168.0.100');
 ```
 
 ---
@@ -405,7 +405,7 @@ INSERT INTO usuarios (nombre, apellido, email, usuario, contraseña, tipo_usuari
 VALUES (
   'Super',
   'Admin',
-  'admin@sistema.com',
+  'admin@example.com',
   'superadmin',
   '$2a$10$YourHashedPasswordHere',
   'superadmin'

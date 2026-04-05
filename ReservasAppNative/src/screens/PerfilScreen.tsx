@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import PasswordValidator from '../components/PasswordValidator';
+import { APP_CONFIG } from '../config/appConfig';
 import type { MainTabsScreenProps } from '../types/navigation';
 import type { Usuario } from '../types';
 import { authService, usuarioService } from '../services/api';
@@ -146,7 +147,7 @@ export default function PerfilScreen({ navigation }: Props) {
             icon="help-circle-outline"
             title="Ayuda"
             onPress={() => {
-              const phoneNumber = '+593969528311';
+              const phoneNumber = APP_CONFIG.SUPPORT_WHATSAPP_NUMBER;
               const url = `whatsapp://send?phone=${phoneNumber}`;
               Linking.openURL(url).catch(() => {
                 Alert.alert('Error', 'No se pudo abrir WhatsApp. Asegúrate de tenerlo instalado.');
