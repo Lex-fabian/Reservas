@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { APP_CONFIG } from '../config/appConfig';
 import type {
   Usuario,
   LoginResponse,
@@ -20,7 +21,7 @@ import type {
   CambioPasswordFormData,
 } from '../types';
 
-const API_URL = 'https://api-ejemplo.onrender.com/api';
+const API_URL = APP_CONFIG.API_URL;
 
 const api: AxiosInstance = axios.create({
   baseURL: API_URL,
